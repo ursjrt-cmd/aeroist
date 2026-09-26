@@ -333,6 +333,7 @@
             </div>
 
             <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-50/50">
+                <!-- MANAGE PRODUCTS TAB -->
                 <div id="tab-manage-products" class="admin-tab-content space-y-4">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                         <div>
@@ -363,6 +364,7 @@
                     </div>
                 </div>
 
+                <!-- ADD/EDIT PRODUCT TAB -->
                 <div id="tab-add-product" class="admin-tab-content hidden max-w-4xl mx-auto">
                     <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
                         <div class="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -446,6 +448,7 @@
                     </div>
                 </div>
 
+                <!-- CATEGORIES TAB -->
                 <div id="tab-categories" class="admin-tab-content hidden max-w-3xl mx-auto space-y-6">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <h4 class="font-bold text-slate-900 text-sm">Add New Main Category</h4>
@@ -471,6 +474,7 @@
                     </div>
                 </div>
 
+                <!-- SETTINGS TAB -->
                 <div id="tab-settings" class="admin-tab-content hidden max-w-3xl mx-auto space-y-6">
                     <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
                         <h4 class="font-extrabold text-slate-900 text-base border-b border-slate-100 pb-4">Store Global Settings</h4>
@@ -562,73 +566,74 @@
         let categoriesData = {
             'Electronics': ['Smartphones', 'Laptops & PCs', 'Audio & Headphones', 'Smart TVs', 'Wearables'],
             'Fashion': ['Men\'s Wear', 'Women\'s Wear', 'Luxury Watches', 'Footwear'],
-            'Luxury & Auto': ['Supercars', 'Yachts', 'Timepieces', 'Collectibles'],
             'Home & Living': ['Furniture', 'Decor & Lighting', 'Smart Appliances']
         };
 
-        let defaultProducts = [
-            {
-                id: '101',
-                name: 'Apple iPhone 16 Pro Max - 256GB Natural Titanium',
-                price: 144900,
-                rating: 4.9,
-                discount: 5,
-                sold: 840,
-                stock: 12,
-                offer: 'Bank offer: 5% Cashback',
-                category: 'Electronics',
-                subcategory: 'Smartphones',
-                image_url: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=800&q=80',
-                buy_link: 'https://www.apple.com/in/iphone-16-pro/',
-                description: 'Grade 5 titanium design with new Camera Control, 4K 120 fps Dolby Vision video recording, and the powerhouse A18 Pro chip.'
-            },
-            {
-                id: '102',
-                name: 'Sony WH-1000XM5 Wireless Noise Canceling Headphones',
-                price: 29990,
-                rating: 4.8,
-                discount: 15,
-                sold: 1205,
-                stock: 45,
-                offer: 'Free Carrying Case',
-                category: 'Electronics',
-                subcategory: 'Audio & Headphones',
-                image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
-                buy_link: 'https://www.sony.co.in/headphones/products/wh-1000xm5',
-                description: 'Industry-leading noise canceling with two processors and 8 microphones for unprecedented sound quality and crystal-clear hands-free calling.'
-            }
-        ];
+        // Initialize with strictly empty products list to exclusively load from Supabase
+        let productsList = [];
 
-        let productsList = [...defaultProducts];
+        async function initApp() {
+            renderCategoryNav();
+            
+            // Integrating the actual Supabase URL and Anon Key directly here
+            const supabaseUrl = 'https://nouupslkmktwsovdyadg.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdXVwc2xrbWt0d3NvdmR5YWRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTI1NjIsImV4cCI6MjEwNTk4ODU2Mn0.89GAlI0DCHTupvy5mcQcOT8UHv80h07FeZMpnZpHLmk';
 
-        function initSupabase() {
-            // Provide your Supabase URL and ANON Key here to fully activate the database connection
-            const supabaseUrl = localStorage.getItem('mechenz_sb_url') || 'YOUR_SUPABASE_URL_HERE';
-            const supabaseKey = localStorage.getItem('mechenz_sb_key') || 'YOUR_SUPABASE_ANON_KEY_HERE';
-
-            if (supabaseUrl !== 'https://nouupslkmktwsovdyadg.supabase.co' && supabaseKey !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdXVwc2xrbWt0d3NvdmR5YWRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTI1NjIsImV4cCI6MjEwNTk4ODU2Mn0.89GAlI0DCHTupvy5mcQcOT8UHv80h07FeZMpnZpHLmk' && window.supabase) {
+            if (window.supabase) {
                 try {
                     supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                     showToast("Connected to Supabase Cloud", "success");
-                    fetchProductsFromSupabase();
+                    
+                    // Concurrently fetch settings and store products
+                    await Promise.all([
+                        fetchStoreSettingsFromSupabase(),
+                        fetchProductsFromSupabase()
+                    ]);
                 } catch (e) {
                     console.error("Supabase init error:", e);
                 }
+            } else {
+                renderProducts();
+            }
+            lucide.createIcons();
+            applyStoreSettings();
+        }
+
+        async function fetchStoreSettingsFromSupabase() {
+            if (!supabaseClient) return;
+            try {
+                // Fetch dynamic store configuration from settings table
+                const { data, error } = await supabaseClient
+                    .from('store_settings')
+                    .select('*')
+                    .eq('id', 1)
+                    .single();
+                
+                if (data) {
+                    if (data.store_name) storeConfig.storeName = data.store_name;
+                    if (data.logo_url) storeConfig.logoUrl = data.logo_url;
+                    if (data.hide_local_buy !== undefined) storeConfig.hideLocalBuy = data.hide_local_buy;
+                    applyStoreSettings();
+                }
+            } catch (err) {
+                console.warn("Notice: Custom store_settings table not initialized yet or empty.", err.message);
             }
         }
 
         async function fetchProductsFromSupabase() {
             if (!supabaseClient) return;
             try {
+                // Fast fetch all store products from 'products' table directly, stripping local defaults
                 const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
-                if (data && data.length > 0) {
+                if (data) {
                     productsList = data;
-                    renderProducts();
-                    renderAdminProductTable();
                 }
             } catch (err) {
-                console.warn("Could not load from Supabase table.", err);
+                console.warn("Could not load from Supabase products table.", err);
+            } finally {
+                renderProducts();
+                renderAdminProductTable();
             }
         }
 
@@ -1048,18 +1053,35 @@
         async function handleStoreSettingsSave(e) {
             e.preventDefault();
             const btn = document.getElementById('save-settings-btn');
-            btn.innerHTML = 'Saving...';
+            btn.innerHTML = 'Saving to Database...';
             
             storeConfig.storeName = document.getElementById('setting-store-name').value.trim() || 'MECHENZ';
             storeConfig.hideLocalBuy = document.getElementById('setting-hide-local-buy').checked;
             
             const logoFile = document.getElementById('setting-logo-file').files[0];
-            if(logoFile) {
-                storeConfig.logoUrl = await uploadImageToSupabaseStorage(logoFile, 'store-assets');
+            if (logoFile) {
+                const uploadedUrl = await uploadImageToSupabaseStorage(logoFile, 'store-assets');
+                if (uploadedUrl) storeConfig.logoUrl = uploadedUrl;
+            }
+
+            // Save globally to Supabase table
+            if (supabaseClient) {
+                try {
+                    const { error } = await supabaseClient.from('store_settings').upsert({
+                        id: 1,
+                        store_name: storeConfig.storeName,
+                        logo_url: storeConfig.logoUrl,
+                        hide_local_buy: storeConfig.hideLocalBuy,
+                        updated_at: new Date()
+                    });
+                    if (error) console.error("Error saving settings to Supabase:", error);
+                } catch(err) {
+                    console.error("Supabase upsert settings error", err);
+                }
             }
 
             applyStoreSettings();
-            showToast("Store settings applied successfully!", "success");
+            showToast("Store settings saved globally!", "success");
             btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Save Settings';
             lucide.createIcons();
         }
@@ -1067,13 +1089,14 @@
         function applyStoreSettings() {
             document.getElementById('header-store-name').innerText = storeConfig.storeName;
             
-            if(storeConfig.logoUrl) {
+            if (storeConfig.logoUrl) {
                 document.getElementById('header-default-icon').classList.add('hidden');
-                document.getElementById('header-custom-logo').src = storeConfig.logoUrl;
-                document.getElementById('header-custom-logo').classList.remove('hidden');
+                const customLogo = document.getElementById('header-custom-logo');
+                customLogo.src = storeConfig.logoUrl;
+                customLogo.classList.remove('hidden');
             }
             
-            if(storeConfig.hideLocalBuy) {
+            if (storeConfig.hideLocalBuy) {
                 document.getElementById('nav-cart-btn').style.display = 'none';
             } else {
                 document.getElementById('nav-cart-btn').style.display = 'flex';
@@ -1286,13 +1309,7 @@
             }, 3500);
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            renderCategoryNav();
-            renderProducts();
-            initSupabase();
-            lucide.createIcons();
-            applyStoreSettings();
-        });
+        window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
