@@ -606,7 +606,7 @@
             const supabaseUrl = localStorage.getItem('mechenz_sb_url') || 'YOUR_SUPABASE_URL_HERE';
             const supabaseKey = localStorage.getItem('mechenz_sb_key') || 'YOUR_SUPABASE_ANON_KEY_HERE';
 
-            if (supabaseUrl !== 'YOUR_SUPABASE_URL_HERE' && supabaseKey !== 'YOUR_SUPABASE_ANON_KEY_HERE' && window.supabase) {
+            if (supabaseUrl !== 'https://nouupslkmktwsovdyadg.supabase.co' && supabaseKey !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdXVwc2xrbWt0d3NvdmR5YWRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTI1NjIsImV4cCI6MjEwNTk4ODU2Mn0.89GAlI0DCHTupvy5mcQcOT8UHv80h07FeZMpnZpHLmk' && window.supabase) {
                 try {
                     supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                     showToast("Connected to Supabase Cloud", "success");
