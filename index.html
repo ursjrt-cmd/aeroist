@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="en" class="h-full bg-white">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JRT Mart | E-Commerce</title>
+    <title>JRT Mart | E-Commerce Storefront</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,16 +13,20 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#2563eb',
-                            600: '#1d4ed8',
-                            700: '#1e40af',
-                            900: '#0f172a'
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            200: '#fecaca',
+                            300: '#fca5a5',
+                            400: '#f87171',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d'
                         }
                     },
                     fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                        sans: ['Inter', 'sans-serif']
                     }
                 }
             }
@@ -32,7 +36,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -42,24 +46,14 @@
 
     <style>
         body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
+            font-family: 'Inter', sans-serif; 
             -webkit-tap-highlight-color: transparent;
         }
-        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
         .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -67,327 +61,330 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-
-        .dropdown-menu {
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(8px);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @media (min-width: 768px) {
-            .dropdown-parent:hover .dropdown-menu {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-            }
+        .scroll-smooth-container {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
     </style>
 </head>
 <body class="h-full flex flex-col text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
 
-    <div id="toast-container" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-5 z-50 flex flex-col gap-2 pointer-events-none sm:max-w-sm"></div>
+    <div id="toast-container" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-5 z-[100] flex flex-col gap-2 pointer-events-none sm:max-w-sm"></div>
+
+    <!-- TOP ANNOUNCEMENT BAR & CURRENCY SELECTOR -->
+    <div class="bg-brand-600 text-white text-[10px] sm:text-xs py-1.5 px-4 hidden sm:flex justify-between items-center z-50 relative">
+        <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
+            <div id="dynamic-header-links" class="flex items-center gap-4"></div>
+            <div class="flex items-center gap-4 font-semibold">
+                <div class="flex items-center gap-1 bg-brand-700 px-2 py-1 rounded-md">
+                    <i data-lucide="globe" class="w-3 h-3"></i>
+                    <select id="currency-selector" onchange="handleCurrencyChange(this.value)" class="bg-transparent text-white border-none outline-none cursor-pointer font-bold text-[10px] sm:text-xs">
+                        <option value="USD" selected class="text-slate-800">USD ($)</option>
+                        <option value="INR" class="text-slate-800">INR (₹)</option>
+                        <option value="GBP" class="text-slate-800">GBP (£)</option>
+                        <option value="EUR" class="text-slate-800">EUR (€)</option>
+                        <option value="CAD" class="text-slate-800">CAD ($)</option>
+                        <option value="AUD" class="text-slate-800">AUD ($)</option>
+                    </select>
+                </div>
+                <a href="#" onclick="handleAdminNavClick(); return false;" class="hover:underline flex items-center gap-1">
+                    <i data-lucide="user" class="w-3 h-3"></i> <span id="nav-admin-btn-text">Sign In / Register</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- MAIN NAVBAR -->
-    <header class="sticky top-0 z-40 bg-white border-b border-slate-200/80 shadow-xs">
+    <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
+            <div class="flex items-center justify-between h-16 sm:h-20 gap-4">
                 
-                <!-- Logo -->
-                <div class="flex items-center gap-2 shrink-0">
-                    <a href="#" onclick="resetFilters()" class="flex items-center gap-2 group">
-                        <div id="header-default-icon" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
-                            <i data-lucide="shopping-bag" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                <!-- Logo (Green Dot Hidden) -->
+                <div class="flex items-center gap-2 shrink-0 max-w-[200px] sm:max-w-[280px]">
+                    <a href="#" onclick="resetFilters(); return false;" class="flex items-center gap-2 group h-12 sm:h-14 overflow-hidden">
+                        <div id="header-default-icon" class="flex items-center">
+                            <span id="site-logo-text-1" class="text-brand-600 font-black text-2xl sm:text-3xl tracking-tighter"></span>
+                            <span id="site-logo-text-2" class="text-brand-600 font-black text-2xl sm:text-3xl tracking-tighter ml-0.5"></span>
+                            <!-- Green dot hidden successfully -->
                         </div>
-                        <img id="header-custom-logo" src="" class="hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
-                        <div>
-                            <span id="header-store-name" class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 block leading-none">JRT</span>
-                            <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-brand-600">Mart</span>
-                        </div>
+                        <img id="header-custom-logo" src="" alt="JRT Mart Logo" class="hidden h-full max-h-12 sm:max-h-14 w-auto max-w-full object-contain transition-all duration-300">
                     </a>
                 </div>
 
                 <!-- Desktop Search Bar -->
-                <div class="hidden md:flex flex-1 max-w-2xl mx-4">
-                    <div class="relative w-full group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-600 transition-colors">
-                            <i data-lucide="search" class="w-5 h-5"></i>
-                        </div>
-                        <input type="text" 
-                               id="main-search-input" 
-                               oninput="handleSearchInput(this.value)"
-                               placeholder="Search products, categories, specs, brands..." 
-                               class="w-full pl-11 pr-10 py-2.5 text-sm bg-slate-100/80 border border-transparent rounded-xl focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all outline-none text-slate-800 placeholder-slate-400 font-medium">
-                        <button id="clear-search-btn" 
-                                onclick="clearSearch()" 
-                                class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                <div class="hidden md:flex flex-1 max-w-3xl mx-4 lg:mx-8">
+                    <div class="relative w-full flex border-2 border-brand-600 rounded-full overflow-hidden">
+                        <input type="text" id="main-search-input" oninput="handleSearchInput(this.value)" placeholder="Search for products, categories..." class="w-full pl-5 pr-10 py-2.5 text-sm bg-white focus:outline-none text-slate-800 placeholder-slate-400 font-medium">
+                        <button type="button" id="clear-search-btn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-14 pr-3 flex items-center text-slate-400 hover:text-slate-600">
                             <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" class="bg-brand-600 text-white px-5 flex items-center justify-center hover:bg-brand-700 transition-colors">
+                            <i data-lucide="search" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Right Action Controls -->
-                <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
-                    <button id="nav-cart-btn" onclick="openCartModal()" class="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 transition-all font-semibold text-xs sm:text-sm relative">
-                        <i data-lucide="shopping-cart" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-600"></i>
-                        <span class="hidden sm:inline">Cart</span>
-                        <span id="cart-count-badge" class="bg-brand-600 text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full">0</span>
-                    </button>
-
-                    <button id="nav-admin-btn" 
-                            onclick="handleAdminNavClick()" 
-                            class="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all shadow-xs">
-                        <i data-lucide="user" class="w-3.5 h-3.5 sm:hidden"></i>
-                        <span id="nav-admin-btn-text">Sign in</span>
+                <div class="flex items-center gap-4 shrink-0">
+                    <div class="hidden sm:flex flex-col items-end text-xs">
+                        <span class="text-slate-500">Call Us</span>
+                        <span class="font-bold text-brand-600">1-800-JRTMART</span>
+                    </div>
+                    <button id="nav-cart-btn" onclick="openCartModal()" class="flex items-center gap-1.5 p-2 rounded-full hover:bg-slate-50 text-slate-700 transition-all relative">
+                        <i data-lucide="shopping-cart" class="w-6 h-6 text-slate-800"></i>
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-brand-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>
                     </button>
                 </div>
             </div>
 
             <!-- Mobile Search Bar -->
             <div class="pb-3 md:hidden">
-                <div class="relative w-full">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div class="relative w-full flex border-2 border-brand-600 rounded-full overflow-hidden">
+                    <input type="text" id="mobile-search-input" oninput="handleSearchInput(this.value)" placeholder="Search..." class="w-full pl-4 pr-8 py-2 text-xs bg-white focus:outline-none text-slate-800 placeholder-slate-400">
+                    <button type="button" class="bg-brand-600 text-white px-3 flex items-center justify-center hover:bg-brand-700">
                         <i data-lucide="search" class="w-4 h-4"></i>
-                    </div>
-                    <input type="text" 
-                           id="mobile-search-input" 
-                           oninput="handleSearchInput(this.value)"
-                           placeholder="Search products, brands..." 
-                           class="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 border border-transparent rounded-lg focus:bg-white focus:border-brand-500 transition-all outline-none text-slate-800 placeholder-slate-400">
-                    <button id="mobile-clear-search-btn" 
-                            onclick="clearSearch()" 
-                            class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400">
-                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- CATEGORIES BAR -->
-        <div class="bg-slate-900 text-slate-200 border-t border-slate-800 text-xs">
-            <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-                <div id="category-nav-container" class="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-2 text-nowrap">
-                    <!-- Dynamic Categories Rendered Here -->
-                </div>
+        <div class="bg-white border-t border-slate-100 shadow-sm">
+            <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-3">
+                <div id="category-nav-container" class="flex items-center gap-4 sm:gap-8 overflow-x-auto no-scrollbar justify-start md:justify-center"></div>
             </div>
         </div>
     </header>
 
-    <!-- HERO / BANNER SECTION -->
-    <section class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white py-6 sm:py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.15),transparent)] pointer-events-none"></div>
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6 relative z-10">
-            <div class="space-y-1.5 sm:space-y-2 text-center md:text-left">
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30">
-                    <i data-lucide="sparkles" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Premium Collections 2026
-                </span>
-                <h1 class="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">Explore Top Rated Products & Deals</h1>
-                <p class="text-slate-400 text-xs sm:text-sm max-w-xl">Find authentic electronics, luxury goods, fashion, and home accessories with verified rates and direct buy options.</p>
-            </div>
-            <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-3.5 py-2.5 rounded-2xl backdrop-blur-md self-center md:self-auto">
-                <div class="text-right">
-                    <p class="text-[10px] sm:text-xs text-slate-400">Active Inventory</p>
-                    <p id="total-products-count" class="text-base sm:text-xl font-bold text-white">0 Items</p>
-                </div>
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-600/30 border border-brand-500/40 flex items-center justify-center text-brand-400">
-                    <i data-lucide="package-check" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                </div>
-            </div>
+    <!-- DYNAMIC TOP CARDS AUTOMATIC SLIDESHOW -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div class="relative group">
+            <button onclick="scrollContainer('top-cards-slideshow', -1)" class="absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white border border-slate-200 rounded-full shadow flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all">
+                <i data-lucide="chevron-left" class="w-5 h-5 text-brand-600"></i>
+            </button>
+            
+            <div id="top-cards-slideshow" class="flex gap-4 overflow-x-auto scroll-smooth-container no-scrollbar py-2"></div>
+
+            <button onclick="scrollContainer('top-cards-slideshow', 1)" class="absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white border border-slate-200 rounded-full shadow flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all">
+                <i data-lucide="chevron-right" class="w-5 h-5 text-brand-600"></i>
+            </button>
         </div>
     </section>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div class="flex flex-row items-center justify-between gap-2 mb-4 sm:mb-6 pb-3 border-b border-slate-200">
-            <div>
-                <h2 id="active-category-title" class="text-base sm:text-xl font-bold text-slate-900 truncate">All Products</h2>
-                <p id="active-filter-subtitle" class="hidden sm:block text-xs text-slate-500 mt-0.5">Showing all catalog products with ratings and price information</p>
-            </div>
-            
-            <div class="flex items-center gap-1.5 shrink-0">
-                <span class="hidden sm:inline text-xs font-semibold text-slate-500 uppercase tracking-wider">Sort By:</span>
-                <select id="sort-select" onchange="handleSortChange(this.value)" class="bg-white border border-slate-200 text-slate-700 text-xs rounded-xl px-2.5 py-1.5 font-medium focus:ring-2 focus:ring-brand-500 outline-none shadow-xs cursor-pointer">
-                    <option value="featured">Featured</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="rating">Highest Rated</option>
-                    <option value="name">Name (A-Z)</option>
-                </select>
-            </div>
+    <!-- RECOMMENDED FOR YOU SECTION -->
+    <main class="max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div class="text-center mb-4">
+            <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Recommended For You</h2>
         </div>
 
-        <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            <!-- Dynamic Product Cards Rendered Here -->
+        <!-- Subcategory Filter Pills & See All -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-6 overflow-x-auto no-scrollbar gap-4">
+            <div id="recommended-subcats-bar" class="flex items-center gap-2 sm:gap-4 shrink-0"></div>
+            <a href="#" onclick="resetFilters(); return false;" class="text-xs font-bold text-brand-600 hover:underline shrink-0 pr-2">See all</a>
         </div>
 
-        <div id="empty-state" class="hidden py-16 text-center space-y-3">
-            <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
-                <i data-lucide="search-x" class="w-7 h-7"></i>
-            </div>
-            <h3 class="text-base font-bold text-slate-800">No Products Found</h3>
-            <p class="text-xs text-slate-500 max-w-xs mx-auto">We couldn't find any products matching your search query or selected category filter.</p>
-            <button onclick="resetFilters()" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs">
-                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Search
+        <!-- HORIZONTAL SLIDESHOW CONTAINER -->
+        <div class="relative group">
+            <button onclick="scrollContainer('product-slider-container', -1)" class="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white border border-slate-200 rounded-full shadow-lg flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all">
+                <i data-lucide="chevron-left" class="w-6 h-6 text-brand-600"></i>
+            </button>
+
+            <div id="product-slider-container" class="flex gap-4 overflow-x-auto scroll-smooth-container no-scrollbar py-2 px-1"></div>
+
+            <button onclick="scrollContainer('product-slider-container', 1)" class="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white border border-slate-200 rounded-full shadow-lg flex items-center justify-center text-slate-700 hover:bg-slate-50 transition-all">
+                <i data-lucide="chevron-right" class="w-6 h-6 text-brand-600"></i>
             </button>
         </div>
     </main>
 
-    <!-- QUICK VIEW MODAL -->
-    <div id="quickview-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="relative bg-white rounded-t-3xl sm:rounded-3xl max-w-3xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl border border-slate-100 transform transition-all">
-            <button onclick="closeModal('quickview-modal')" class="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-slate-100/80 backdrop-blur-md hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors">
+    <!-- DYNAMIC CUSTOM SECTIONS CONTAINER -->
+    <section id="custom-admin-sections-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-8"></section>
+
+    <!-- BRANDS / QUICK LINKS CIRCLES -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-b border-slate-100 my-4">
+        <div class="text-center mb-3">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider">Top Brands / Categories</h3>
+        </div>
+        <div id="dynamic-brand-circles" class="flex items-center gap-4 sm:gap-8 overflow-x-auto no-scrollbar justify-start md:justify-center py-2"></div>
+    </section>
+
+    <!-- PROMO BANNER SECTION -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <a id="promo-banner-link" href="#" class="block w-full bg-brand-600 rounded-2xl flex items-center justify-center p-8 text-white shadow-md relative overflow-hidden cursor-pointer hover:bg-brand-700 transition-colors">
+            <div class="absolute right-0 bottom-0 opacity-20 transform translate-x-1/4 translate-y-1/4">
+                <i data-lucide="shopping-bag" class="w-64 h-64"></i>
+            </div>
+            <div class="relative z-10 text-center">
+                <h2 id="promo-banner-title" class="text-2xl sm:text-4xl font-black italic tracking-wider mb-2">EXPLORE NEW ARRIVAL</h2>
+                <p id="promo-banner-subtitle" class="text-base sm:text-lg font-semibold opacity-95">Taste the Authentic Asian Flavors</p>
+                <button type="button" id="promo-banner-btn" class="mt-5 px-8 py-3 bg-white text-brand-600 font-extrabold rounded-full text-sm hover:bg-slate-100 transition-colors pointer-events-none shadow">Shop Now</button>
+            </div>
+        </a>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-50 border-t border-slate-200 pt-10 pb-6 mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h4 class="font-bold text-slate-900 mb-4 text-sm uppercase">Customer Service</h4>
+                    <ul id="dynamic-footer-links-1" class="space-y-2 text-xs text-slate-600"></ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 mb-4 text-sm uppercase">About Us</h4>
+                    <ul id="dynamic-footer-links-2" class="space-y-2 text-xs text-slate-600"></ul>
+                </div>
+                <div class="md:col-span-2 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <img id="footer-logo-preview" src="" class="hidden max-h-12 w-auto object-contain shrink-0">
+                    <i id="footer-default-icon" data-lucide="smartphone" class="w-12 h-12 text-brand-600 shrink-0"></i>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm sm:text-base">Need it today? Download our App</h4>
+                        <p class="text-xs text-slate-500 mt-1">Get exclusive app-only discounts and same-day delivery tracking.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-slate-200 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+                <p>&copy; 2026 JRT Mart. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SLIDE CARD INFO / RELATED MODAL -->
+    <div id="slide-info-modal" class="fixed inset-0 z-[60] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl relative p-6 space-y-4">
+            <button onclick="closeModal('slide-info-modal')" class="absolute top-4 right-4 z-20 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 shadow-sm">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
-            <div class="grid grid-cols-1 md:grid-cols-2">
-                <div class="bg-slate-50 p-4 sm:p-6 flex items-center justify-center relative min-h-[220px] sm:min-h-[280px]">
-                    <img id="qv-image" src="" alt="" class="max-h-56 sm:max-h-72 w-full object-contain rounded-xl drop-shadow-sm">
-                    <span id="qv-category-badge" class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-brand-100 text-brand-700 border border-brand-200"></span>
-                    <span id="qv-discount-badge" class="hidden absolute top-3 right-12 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-rose-500 text-white border border-rose-600 shadow-xs"></span>
-                </div>
-                <div class="p-5 sm:p-6 md:p-8 flex flex-col justify-between space-y-4">
-                    <div class="space-y-2.5">
-                        <div class="flex items-center justify-between gap-2">
-                            <span id="qv-subcategory-tag" class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest"></span>
-                            <div class="flex items-center gap-1 text-amber-500 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
-                                <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
-                                <span id="qv-rating" class="text-xs font-extrabold"></span>
-                            </div>
-                        </div>
-                        <h3 id="qv-title" class="text-lg sm:text-2xl font-bold text-slate-900 leading-tight"></h3>
-                        <div class="flex items-baseline gap-2">
-                            <span id="qv-price" class="text-xl sm:text-2xl font-black text-brand-600"></span>
-                            <span class="text-[10px] sm:text-xs text-slate-400">Incl. all taxes</span>
-                        </div>
-                        <p id="qv-offer-text" class="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded-md hidden"></p>
-                        
-                        <div class="flex gap-4 text-xs font-medium text-slate-500 py-1">
-                            <span id="qv-sold" class="flex items-center gap-1"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Sold: 0</span>
-                            <span id="qv-left" class="flex items-center gap-1"><i data-lucide="box" class="w-3.5 h-3.5"></i> Left: 0</span>
-                        </div>
+            <div id="slide-info-content" class="space-y-4"></div>
+        </div>
+    </div>
 
-                        <p id="qv-description" class="text-xs sm:text-sm text-slate-600 leading-relaxed custom-scrollbar max-h-24 overflow-y-auto"></p>
-                    </div>
-
-                    <div class="space-y-2 pt-3 border-t border-slate-100">
-                        <a id="qv-buy-btn" href="#" target="_blank" rel="noopener font-bold" class="w-full py-2.5 sm:py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-brand-500/20">
-                            <i data-lucide="external-link" class="w-4 h-4"></i> Buy Product Now
-                        </a>
-                        <button id="qv-cart-btn" onclick="" class="w-full py-2.5 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors">
-                            <i data-lucide="shopping-cart" class="w-4 h-4"></i> Add to Local Cart
-                        </button>
-                    </div>
+    <!-- PRODUCT DETAIL MODAL -->
+    <div id="product-detail-modal" class="fixed inset-0 z-[60] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl relative flex flex-col md:flex-row overflow-hidden max-h-[95vh] md:max-h-[85vh]">
+            <button onclick="closeModal('product-detail-modal')" class="absolute top-4 right-4 z-20 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 shadow-sm transition-all">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <div class="w-full md:w-1/2 bg-slate-50 p-4 sm:p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-100 relative">
+                <div class="w-full aspect-square relative flex items-center justify-center mb-4 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                    <img id="detail-main-image" src="" class="max-h-full max-w-full object-contain p-4 transition-opacity duration-300">
                 </div>
+            </div>
+            <div class="w-full md:w-1/2 p-5 sm:p-8 flex flex-col overflow-y-auto custom-scrollbar">
+                <span id="detail-category" class="text-xs font-bold text-brand-600 uppercase tracking-wide mb-2">Category</span>
+                <h2 id="detail-title" class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight mb-4">Product Title</h2>
+                <div class="flex flex-col gap-2 mb-6 pb-6 border-b border-slate-100">
+                    <div id="detail-price-container" class="flex items-end gap-3 flex-wrap"></div>
+                    <div><span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded mt-1 inline-block uppercase">In Stock</span></div>
+                </div>
+                <div class="mb-6 flex-1">
+                    <h4 class="text-sm font-bold text-slate-900 mb-2">Description & Specifications</h4>
+                    <p id="detail-description" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"></p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100 mt-auto">
+                    <button id="detail-cart-btn" class="flex-1 py-3.5 bg-white border-2 border-brand-600 text-brand-600 hover:bg-brand-50 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i> Add to Cart
+                    </button>
+                    <button id="detail-buy-btn" class="flex-1 py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md">
+                        <i data-lucide="zap" class="w-5 h-5"></i> Buy Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CART MODAL -->
+    <div id="cart-modal" class="fixed inset-0 z-[65] hidden bg-slate-900/60 backdrop-blur-sm flex justify-end">
+        <div class="bg-white w-full sm:max-w-md h-full flex flex-col shadow-2xl p-0">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 text-brand-600"></i> My Cart (<span id="cart-drawer-count">0</span>)
+                </h3>
+                <button onclick="closeModal('cart-modal')" class="p-1.5 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-800">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar"></div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-4">
+                <div class="flex items-center justify-between text-slate-600 text-sm">
+                    <span>Subtotal</span>
+                    <span id="cart-total-price" class="font-bold text-slate-900">$0.00</span>
+                </div>
+                <button onclick="checkoutCart()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-full font-bold text-sm shadow-md transition-all">
+                    Proceed to Checkout
+                </button>
             </div>
         </div>
     </div>
 
     <!-- ADMIN LOGIN MODAL -->
-    <div id="admin-auth-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-8 shadow-2xl border border-slate-100 space-y-5 relative overflow-hidden">
-            <button onclick="closeModal('admin-auth-modal')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 z-10">
-                <i data-lucide="x" class="w-4 h-4"></i>
+    <div id="admin-auth-modal" class="fixed inset-0 z-[70] hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 space-y-6 relative overflow-hidden">
+            <button onclick="closeModal('admin-auth-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            
-            <div class="text-center space-y-1.5">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-900 text-emerald-400 flex items-center justify-center mx-auto shadow-md">
-                    <i data-lucide="user-check" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mx-auto">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
                 </div>
-                <h3 class="text-lg sm:text-xl font-extrabold text-slate-900">Sign in</h3>
-                <p class="text-xs text-slate-500">Sign in securely to manage catalog.</p>
+                <h3 class="text-xl font-bold text-slate-900">Admin Sign In</h3>
             </div>
-
-            <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-3.5">
-                <div>
-                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Username</label>
-                    <div class="relative">
-                        <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
-                        <input type="text" id="admin-username" required placeholder="Enter username" class="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none font-medium">
-                    </div>
+            <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div><input type="text" id="admin-username" required placeholder="Username" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-brand-500 outline-none"></div>
+                <div><input type="password" id="admin-password" required placeholder="Password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-brand-500 outline-none"></div>
+                <div id="login-error-msg" class="hidden p-3 rounded-lg bg-red-50 text-red-600 text-xs font-medium flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i> Invalid credentials. Use <strong>Wrong</strong> / <strong>credentials</strong>
                 </div>
-                <div>
-                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
-                    <div class="relative">
-                        <i data-lucide="key-round" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
-                        <input type="password" id="admin-password" required placeholder="Enter password" class="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none font-medium">
-                    </div>
-                </div>
-                <div id="login-error-msg" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium flex items-center gap-2">
-                    <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
-                    <span>Invalid credentials.</span>
-                </div>
-                <button type="submit" class="w-full py-2.5 sm:py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md">
-                    Sign In
-                </button>
+                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg text-sm transition-all">Sign In</button>
             </form>
         </div>
     </div>
 
     <!-- ADMIN DASHBOARD MODAL -->
-    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 hidden bg-slate-900/80 backdrop-blur-md overflow-y-auto p-2 sm:p-6 flex items-center justify-center">
-        <div class="bg-white rounded-2xl sm:rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
-            
-            <div class="bg-slate-900 text-white px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between shrink-0">
+    <div id="admin-dashboard-modal" class="fixed inset-0 z-[70] hidden bg-slate-900/80 backdrop-blur-sm overflow-y-auto p-2 sm:p-6 flex items-center justify-center">
+        <div class="bg-white rounded-2xl sm:rounded-3xl max-w-6xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+            <div class="bg-brand-600 text-white px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                        <i data-lucide="user-check" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-xs sm:text-base leading-none">Admin Console</h3>
-                        <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">Logged in securely</span>
-                    </div>
+                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"><i data-lucide="settings" class="w-4 h-4 sm:w-5 sm:h-5"></i></div>
+                    <div><h3 class="font-bold text-sm sm:text-base leading-none">Admin Console</h3></div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="logoutAdmin()" class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1">
-                        <i data-lucide="log-out" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Logout
+                <div class="flex items-center gap-3">
+                    <button onclick="logoutAdmin()" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors flex items-center gap-1">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout
                     </button>
-                    <button onclick="closeModal('admin-dashboard-modal')" class="p-1 rounded-lg text-slate-400 hover:text-white">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
+                    <button onclick="closeModal('admin-dashboard-modal')" class="p-1 text-brand-100 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
             </div>
 
-            <div class="bg-slate-100 px-3 sm:px-6 border-b border-slate-200 flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar shrink-0">
-                <button onclick="switchAdminTab('tab-manage-products')" id="tab-btn-manage-products" class="admin-tab-btn py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 border-brand-600 text-brand-600 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap">
-                    <i data-lucide="layers" class="w-3.5 h-3.5"></i> Catalog
-                </button>
-                <button onclick="switchAdminTab('tab-add-product')" id="tab-btn-add-product" class="admin-tab-btn py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap">
-                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Add/Edit
-                </button>
-                <button onclick="switchAdminTab('tab-categories')" id="tab-btn-categories" class="admin-tab-btn py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap">
-                    <i data-lucide="tags" class="w-3.5 h-3.5"></i> Categories
-                </button>
-                <button onclick="switchAdminTab('tab-settings')" id="tab-btn-settings" class="admin-tab-btn py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 border-transparent text-slate-600 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap">
-                    <i data-lucide="settings" class="w-3.5 h-3.5"></i> Settings
-                </button>
+            <!-- Admin Tabs Navigation -->
+            <div class="bg-slate-50 px-3 sm:px-6 border-b border-slate-200 flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar shrink-0">
+                <button onclick="switchAdminTab('tab-manage-products')" id="tab-btn-manage-products" class="admin-tab-btn py-3 sm:py-4 px-3 sm:px-4 border-b-2 border-brand-600 text-brand-600 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="layers" class="w-4 h-4"></i> Catalog</button>
+                <button onclick="switchAdminTab('tab-add-product')" id="tab-btn-add-product" class="admin-tab-btn py-3 sm:py-4 px-3 sm:px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="plus-circle" class="w-4 h-4"></i> Add/Edit Product</button>
+                <button onclick="switchAdminTab('tab-custom-sections')" id="tab-btn-custom-sections" class="admin-tab-btn py-3 sm:py-4 px-3 sm:px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="layout-grid" class="w-4 h-4"></i> Add Custom Sections</button>
+                <button onclick="switchAdminTab('tab-settings')" id="tab-btn-settings" class="admin-tab-btn py-3 sm:py-4 px-3 sm:px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap"><i data-lucide="sliders" class="w-4 h-4"></i> Storefront Settings & Logo</button>
             </div>
 
-            <div class="p-3 sm:p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-50/50">
+            <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-50">
                 <!-- MANAGE PRODUCTS TAB -->
-                <div id="tab-manage-products" class="admin-tab-content space-y-4">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs">
-                        <div>
-                            <h4 class="font-bold text-slate-900 text-xs sm:text-sm">Product Inventory Listing</h4>
-                            <p class="text-[10px] sm:text-xs text-slate-500">Edit prices, descriptions, ratings or remove items</p>
-                        </div>
-                        <button onclick="openAddProductForm()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Product
+                <div id="tab-manage-products" class="admin-tab-content space-y-4 bg-white p-4 rounded-xl border border-slate-200">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                        <h4 class="font-bold text-slate-900 text-sm sm:text-base">Product Inventory</h4>
+                        <button onclick="openAddProductForm()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add Product
                         </button>
                     </div>
-
-                    <div class="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-200">
+                                <thead class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
                                     <tr>
                                         <th class="p-3">Product</th>
                                         <th class="p-3 hidden sm:table-cell">Category</th>
-                                        <th class="p-3">Rate</th>
-                                        <th class="p-3 hidden md:table-cell">Metrics</th>
+                                        <th class="p-3">Price (<span id="admin-table-currency-label">USD</span>)</th>
                                         <th class="p-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="admin-product-table-body" class="divide-y divide-slate-100 font-medium">
-                                </tbody>
+                                <tbody id="admin-product-table-body" class="divide-y divide-slate-100 font-medium text-slate-700 bg-white"></tbody>
                             </table>
                         </div>
                     </div>
@@ -395,80 +392,59 @@
 
                 <!-- ADD/EDIT PRODUCT TAB -->
                 <div id="tab-add-product" class="admin-tab-content hidden max-w-4xl mx-auto">
-                    <div class="bg-white p-4 sm:p-8 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs space-y-5">
+                    <div class="bg-white p-4 sm:p-6 border border-slate-200 rounded-xl space-y-5">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                            <div>
-                                <h4 id="form-heading-title" class="font-extrabold text-slate-900 text-sm sm:text-base">Add New Product to Store</h4>
-                                <p class="text-[10px] sm:text-xs text-slate-500">All fields sync to Supabase database</p>
-                            </div>
-                            <span id="editing-indicator" class="hidden px-2 py-0.5 bg-amber-100 text-amber-800 text-[9px] sm:text-[10px] font-bold rounded-full uppercase">Editing</span>
+                            <h4 id="form-heading-title" class="font-bold text-slate-900 text-sm sm:text-base">Add New Product</h4>
                         </div>
-
-                        <form onsubmit="handleProductSubmit(event)" class="space-y-3.5">
+                        <form onsubmit="handleProductSubmit(event)" class="space-y-4">
                             <input type="hidden" id="prod-id">
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <div class="sm:col-span-3">
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Product Title *</label>
-                                    <input type="text" id="prod-title" required placeholder="e.g. Smart LED TV 55 Inch" class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Rate / Price (₹) *</label>
-                                    <input type="number" id="prod-price" step="0.01" required placeholder="49999" class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Rating (0-5) *</label>
-                                    <input type="number" id="prod-rating" step="0.1" min="0" max="5" required placeholder="4.8" class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Discount %</label>
-                                    <input type="number" id="prod-discount" min="0" max="100" placeholder="15" class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Items Sold</label>
-                                    <input type="number" id="prod-sold" min="0" placeholder="120" class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Stock Left</label>
-                                    <input type="number" id="prod-stock" min="0" placeholder="45" class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Offer Text</label>
-                                    <input type="text" id="prod-offer" placeholder="Free Delivery" class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                <div class="sm:col-span-4">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Product Title *</label>
+                                    <input type="text" id="prod-title" required class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500">
                                 </div>
                                 <div class="sm:col-span-1">
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Category *</label>
-                                    <select id="prod-category" onchange="updateSubcategoryDropdown()" required class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium"></select>
+                                    <label id="label-prod-price" class="block text-xs font-bold text-slate-700 mb-1">Price (in USD) *</label>
+                                    <input type="number" id="prod-price" step="0.01" required class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500">
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <label id="label-prod-original-price" class="block text-xs font-bold text-slate-700 mb-1">Orig. Price</label>
+                                    <input type="number" id="prod-original-price" step="0.01" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500" placeholder="Optional">
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+                                    <select id="prod-category" onchange="updateSubcategoryDropdown()" required class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></select>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Sub-Category *</label>
+                                    <select id="prod-subcategory" required class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></select>
                                 </div>
                                 <div class="sm:col-span-2">
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Sub-Category *</label>
-                                    <select id="prod-subcategory" required class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium"></select>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Brand Name</label>
+                                    <input type="text" id="prod-brand" placeholder="e.g. Dongwon, Orion, Samlip" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500">
                                 </div>
-                                <div class="sm:col-span-3">
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Direct Buy URL *</label>
-                                    <input type="url" id="prod-buylink" required placeholder="https://buy.example.com/..." class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Badges / Discounts (e.g. New, -28%, Final Sale)</label>
+                                    <input type="text" id="prod-badge" placeholder="e.g. New, -28%" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500">
                                 </div>
-                                <div class="sm:col-span-3">
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Description & Specs *</label>
-                                    <textarea id="prod-description" rows="3" required placeholder="Full details, specifications..." class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium"></textarea>
+                                <div class="sm:col-span-4">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Direct Buy / External URL</label>
+                                    <input type="url" id="prod-buylink" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500">
                                 </div>
-                                <div class="sm:col-span-3 space-y-2">
-                                    <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider">Photo Upload / Image URL</label>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
-                                        <div>
-                                            <input type="file" id="prod-file-input" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer w-full">
-                                        </div>
-                                        <div>
-                                            <input type="text" id="prod-image-url" placeholder="OR paste https://..." class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                                        </div>
-                                    </div>
+                                <div class="sm:col-span-4">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Description & Specs</label>
+                                    <textarea id="prod-description" rows="3" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></textarea>
+                                </div>
+                                <div class="sm:col-span-4 space-y-2">
+                                    <label class="block text-xs font-bold text-slate-700">Image URLs (Comma separated for multiple images)</label>
+                                    <textarea id="prod-image-url" rows="2" placeholder="https://image1.jpg, https://image2.jpg" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></textarea>
                                 </div>
                             </div>
-
-                            <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
-                                <button type="submit" id="save-prod-btn" class="flex-1 py-2.5 sm:py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md">
-                                    <i data-lucide="check-circle-2" class="w-4 h-4"></i> Save & Publish
+                            <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
+                                <button type="submit" id="save-prod-btn" class="flex-1 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all">
+                                    <i data-lucide="check" class="w-4 h-4"></i> Save & Store in Supabase
                                 </button>
-                                <button type="button" onclick="resetProductForm(); switchAdminTab('tab-manage-products');" class="px-4 py-2.5 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs">
+                                <button type="button" onclick="resetProductForm(); switchAdminTab('tab-manage-products');" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-sm">
                                     Cancel
                                 </button>
                             </div>
@@ -476,780 +452,1031 @@
                     </div>
                 </div>
 
-                <!-- CATEGORIES TAB -->
-                <div id="tab-categories" class="admin-tab-content hidden max-w-3xl mx-auto space-y-4">
-                    <div class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                        <h4 class="font-bold text-slate-900 text-xs sm:text-sm">Add New Main Category</h4>
-                        <div class="flex gap-2">
-                            <input type="text" id="new-cat-input" placeholder="e.g. Gaming Gear" class="flex-1 p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                            <button onclick="handleAddCategory()" class="px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold whitespace-nowrap">Add</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                        <h4 class="font-bold text-slate-900 text-xs sm:text-sm">Add Subcategory</h4>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <select id="target-main-cat-select" class="p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium"></select>
-                            <input type="text" id="new-subcat-input" placeholder="e.g. Keyboards" class="p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                        </div>
-                        <button onclick="handleAddSubcategory()" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold">Attach Subcategory</button>
-                    </div>
-
-                    <div class="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                        <h4 class="font-bold text-slate-900 text-xs sm:text-sm">Active Category Tree</h4>
-                        <div id="category-tree-display" class="space-y-2 text-xs font-medium text-slate-700"></div>
-                    </div>
-                </div>
-
-                <!-- SETTINGS TAB -->
-                <div id="tab-settings" class="admin-tab-content hidden max-w-3xl mx-auto space-y-4">
-                    <div class="bg-white p-4 sm:p-8 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs space-y-5">
-                        <h4 class="font-extrabold text-slate-900 text-sm sm:text-base border-b border-slate-100 pb-3">Store Global Settings</h4>
-                        
-                        <form onsubmit="handleStoreSettingsSave(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Header Store Name</label>
-                                <input type="text" id="setting-store-name" placeholder="e.g. JRT Mart" class="w-full p-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider">Header Store Logo</label>
-                                <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
-                                        <img id="setting-logo-preview" src="" class="w-full h-full object-cover hidden">
-                                        <i id="setting-logo-icon" data-lucide="image" class="w-5 h-5 text-slate-400"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <input type="file" id="setting-logo-file" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer w-full">
-                                    </div>
+                <!-- ADD CUSTOM SECTIONS TAB -->
+                <div id="tab-custom-sections" class="admin-tab-content hidden max-w-4xl mx-auto space-y-6">
+                    <div class="bg-white p-6 border border-slate-200 rounded-xl space-y-4 shadow-sm">
+                        <h4 class="font-bold text-slate-900 text-base border-b border-slate-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-brand-600"></i> Create New Custom Horizontal Section
+                        </h4>
+                        <form onsubmit="handleCreateCustomSection(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Section Title *</label>
+                                    <input type="text" id="custom-section-title" required placeholder="e.g. Featured Asian Snacks" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Section Description / Subtitle</label>
+                                    <input type="text" id="custom-section-desc" placeholder="e.g. Taste authentic savory treats" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500">
                                 </div>
                             </div>
-
-                            <div class="pt-3 border-t border-slate-100">
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" id="setting-hide-local-buy" class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300">
-                                    <div>
-                                        <span class="block text-xs sm:text-sm font-bold text-slate-900">Hide 'Local Cart' Option Globally</span>
-                                        <span class="block text-[10px] sm:text-xs text-slate-500">Only external direct buy links will be shown.</span>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <button type="submit" id="save-settings-btn" class="w-full py-2.5 sm:py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md mt-4">
-                                <i data-lucide="save" class="w-4 h-4"></i> Save Settings
+                            <button type="submit" class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-md">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Create Horizontal Section
                             </button>
                         </form>
                     </div>
+
+                    <div class="bg-white p-6 border border-slate-200 rounded-xl space-y-4 shadow-sm">
+                        <h4 class="font-bold text-slate-900 text-base border-b border-slate-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="list" class="w-5 h-5 text-brand-600"></i> Existing Custom Sections & Product Management
+                        </h4>
+                        <div id="custom-sections-admin-list" class="space-y-4"></div>
+                    </div>
                 </div>
 
+                <!-- SETTINGS & LOGO TAB -->
+                <div id="tab-settings" class="admin-tab-content hidden mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <form id="storefront-settings-form" onsubmit="handleStorefrontSettingsSave(event)" class="col-span-1 lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <!-- HEADER LOGO CUSTOMIZATION WITH FILE UPLOAD & PREVIEW -->
+                        <div class="bg-white p-6 border border-slate-200 rounded-xl space-y-5 shadow-sm lg:col-span-2">
+                            <h4 class="font-bold text-slate-900 text-base border-b border-slate-100 pb-3 flex items-center gap-2"><i data-lucide="image" class="w-4 h-4 text-brand-600"></i> Header & Footer Logo Customization</h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Header Logo Section -->
+                                <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <label class="block text-xs font-bold text-slate-800">Header Logo Image</label>
+                                    
+                                    <!-- Live Preview -->
+                                    <div class="flex items-center justify-center p-3 bg-white border border-dashed border-slate-300 rounded-lg min-h-[80px]">
+                                        <img id="header-logo-preview" src="" alt="Header Logo Preview" class="hidden max-h-12 w-auto object-contain">
+                                        <span id="header-logo-placeholder" class="text-xs text-slate-400 font-medium">No logo uploaded/selected</span>
+                                    </div>
+
+                                    <!-- Upload File Input -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Upload File directly:</label>
+                                        <input type="file" id="header-logo-file" accept="image/*" onchange="handleHeaderLogoFileUpload(event)" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100 cursor-pointer">
+                                    </div>
+
+                                    <!-- URL Input -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Or paste Image URL:</label>
+                                        <input type="text" id="setting-logo-url" oninput="updateLogoPreviews()" placeholder="https://example.com/logo.png" class="w-full p-2.5 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:border-brand-500">
+                                    </div>
+                                </div>
+
+                                <!-- Footer Logo Section -->
+                                <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <label class="block text-xs font-bold text-slate-800">Footer Logo Image</label>
+                                    
+                                    <!-- Live Preview -->
+                                    <div class="flex items-center justify-center p-3 bg-white border border-dashed border-slate-300 rounded-lg min-h-[80px]">
+                                        <img id="footer-logo-preview-box" src="" alt="Footer Logo Preview" class="hidden max-h-12 w-auto object-contain">
+                                        <span id="footer-logo-placeholder" class="text-xs text-slate-400 font-medium">No logo uploaded/selected</span>
+                                    </div>
+
+                                    <!-- Upload File Input -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Upload File directly:</label>
+                                        <input type="file" id="footer-logo-file" accept="image/*" onchange="handleFooterLogoFileUpload(event)" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100 cursor-pointer">
+                                    </div>
+
+                                    <!-- URL Input -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Or paste Image URL:</label>
+                                        <input type="text" id="setting-footer-logo-url" oninput="updateLogoPreviews()" placeholder="https://example.com/footer-logo.png" class="w-full p-2.5 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:border-brand-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOP SLIDESHOW CARDS SETTINGS -->
+                        <div class="bg-white p-6 border border-slate-200 rounded-xl space-y-5 shadow-sm lg:col-span-2">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <h4 class="font-bold text-slate-900 text-base flex items-center gap-2"><i data-lucide="slideshow" class="w-4 h-4 text-brand-600"></i> Top Slideshow Cards (Edit, Add, Links, Background Images, Info)</h4>
+                                <button type="button" onclick="addTopSlideCardRow()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-all"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Slide Card</button>
+                            </div>
+                            <div id="admin-top-slides-container" class="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2"></div>
+                        </div>
+
+                        <div class="bg-white p-6 border border-slate-200 rounded-xl space-y-5 shadow-sm">
+                            <h4 class="font-bold text-slate-900 text-base border-b border-slate-100 pb-3 flex items-center gap-2"><i data-lucide="layout" class="w-4 h-4"></i> General Info</h4>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Store Name</label><input type="text" id="setting-store-name" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></div>
+                        </div>
+
+                        <div class="bg-white p-6 border border-slate-200 rounded-xl space-y-5 shadow-sm">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <h4 class="font-bold text-slate-900 text-base flex items-center gap-2"><i data-lucide="tags" class="w-4 h-4 text-brand-600"></i> Manage Categories</h4>
+                                <button type="button" onclick="addCategoryRow()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-all"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Category</button>
+                            </div>
+                            <div id="admin-categories-container" class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2"></div>
+                        </div>
+
+                        <!-- TOP CIRCLE CATEGORIES / BRAND CIRCLES -->
+                        <div class="bg-white p-6 border border-slate-200 rounded-xl space-y-5 shadow-sm lg:col-span-2">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <h4 class="font-bold text-slate-900 text-base flex items-center gap-2"><i data-lucide="circle-dot" class="w-4 h-4 text-brand-600"></i> Top Circle Categories / Brands</h4>
+                                <button type="button" onclick="addBrandCircleRow()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-all"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Circle Item</button>
+                            </div>
+                            <div id="admin-brand-circles-container" class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2"></div>
+                        </div>
+
+                        <div class="col-span-1 lg:col-span-2 flex justify-end gap-4 border-t border-slate-200 pt-6">
+                            <button type="submit" id="save-storefront-btn" class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md">
+                                <i data-lucide="save" class="w-4 h-4"></i> Save Storefront Settings & Logo to Supabase
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- CART MODAL / DRAWER -->
-    <div id="cart-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex justify-end">
-        <div class="bg-white w-full sm:max-w-md h-full flex flex-col shadow-2xl p-4 sm:p-6 space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="shopping-bag" class="w-5 h-5 text-brand-600"></i>
-                    <h3 class="font-bold text-base sm:text-lg text-slate-900">Your Shopping Cart</h3>
-                </div>
-                <button onclick="closeModal('cart-modal')" class="p-1 rounded-lg text-slate-400 hover:text-slate-600">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div id="cart-items-container" class="flex-1 overflow-y-auto space-y-2.5 custom-scrollbar">
-                <!-- Cart items -->
-            </div>
-            <div class="pt-3 border-t border-slate-100 space-y-3">
-                <div class="flex items-center justify-between font-extrabold text-sm sm:text-base text-slate-900">
-                    <span>Total Amount:</span>
-                    <span id="cart-total-price" class="text-brand-600">₹0</span>
-                </div>
-                <button onclick="checkoutCart()" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all">
-                    Proceed to Checkout
-                </button>
-            </div>
-        </div>
-    </div>
-
+    <!-- MAIN JAVASCRIPT -->
     <script>
-        // GLOBAL APP STATE
+        // Supabase configuration connected to your instance
+        const supabaseUrl = 'https://nouupslkmktwsovdyadg.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdXVwc2xrbWt0d3NvdmR5YWRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTI1NjIsImV4cCI6MjEwNTk4ODU2Mn0.89GAlI0DCHTupvy5mcQcOT8UHv80h07FeZMpnZpHLmk';
+        
         let supabaseClient = null;
         let isAdminLoggedIn = false;
         let activeCategory = 'All';
         let activeSubcategory = null;
         let searchQuery = '';
-        let currentSort = 'featured';
         let cart = [];
+        let topSlideshowInterval = null;
         
+        const currencies = {
+            USD: { symbol: '$', rate: 1 },
+            INR: { symbol: '₹', rate: 84.00 },
+            GBP: { symbol: '£', rate: 0.79 },
+            EUR: { symbol: '€', rate: 0.92 },
+            CAD: { symbol: 'C$', rate: 1.36 },
+            AUD: { symbol: 'A$', rate: 1.53 }
+        };
+        let activeCurrency = 'USD';
+
         let storeConfig = {
             storeName: 'JRT Mart',
             logoUrl: '',
-            hideLocalBuy: false
-        };
-
-        let categoriesData = {
-            'Electronics': ['Smartphones', 'Laptops & PCs', 'Audio & Headphones', 'Smart TVs', 'Wearables'],
-            'Fashion': ['Men\'s Wear', 'Women\'s Wear', 'Luxury Watches', 'Footwear'],
-            'Home & Living': ['Furniture', 'Decor & Lighting', 'Smart Appliances']
+            footerLogoUrl: '',
+            promoBanner: { title: 'EXPLORE NEW ARRIVAL', subtitle: 'Taste the Authentic Asian Flavors', buttonText: 'Shop Now', link: '#' },
+            topSlideshowCards: [
+                {
+                    id: 'slide-1',
+                    title: "Everyday's Sale",
+                    subtitle: "Up to 40% OFF daily",
+                    badge: "Special",
+                    bgGradient: "from-red-500 to-amber-500",
+                    bgImage: "",
+                    linkType: "category",
+                    linkTarget: "Everyday's Sale",
+                    infoTitle: "Everyday's Special Sale Event",
+                    infoDescription: "Enjoy massive daily discounts across fresh vegetables, Korean noodles, and imported snacks. Limited time offers available every single day!",
+                    relatedImage: "https://placehold.co/600x300/dc2626/ffffff?text=Sale+Banner"
+                },
+                {
+                    id: 'slide-2',
+                    title: "Fresh Produce",
+                    subtitle: "Farm fresh vegetables",
+                    badge: "Organic",
+                    bgGradient: "from-emerald-500 to-teal-600",
+                    bgImage: "",
+                    linkType: "category",
+                    linkTarget: "Fresh Produce",
+                    infoTitle: "Fresh Farm Produce Daily",
+                    infoDescription: "Directly sourced from organic local farms. Guaranteed crisp, pesticide-free, and nutrient-rich fruits and vegetables delivered to your doorstep.",
+                    relatedImage: "https://placehold.co/600x300/059669/ffffff?text=Organic+Produce"
+                },
+                {
+                    id: 'slide-3',
+                    title: "Seafood Market",
+                    subtitle: "Fresh ocean catch",
+                    badge: "Catch of Day",
+                    bgGradient: "from-blue-500 to-cyan-600",
+                    bgImage: "",
+                    linkType: "category",
+                    linkTarget: "Seafood Market",
+                    infoTitle: "Wild Caught Seafood Market",
+                    infoDescription: "Ocean fresh fish, prawns, and crabs processed under strict hygienic conditions. Experience restaurant-grade seafood at home.",
+                    relatedImage: "https://placehold.co/600x300/2563eb/ffffff?text=Seafood+Market"
+                },
+                {
+                    id: 'slide-4',
+                    title: "Meat Specials",
+                    subtitle: "Prime cuts & BBQ",
+                    badge: "Premium",
+                    bgGradient: "from-rose-600 to-red-700",
+                    bgImage: "",
+                    linkType: "category",
+                    linkTarget: "Meat Specials",
+                    infoTitle: "Premium Meat Cuts & BBQ",
+                    infoDescription: "Tender beef, succulent pork, and premium grade chicken cuts ready for your weekend barbecues and gourmet cooking.",
+                    relatedImage: "https://placehold.co/600x300/e11d48/ffffff?text=Meat+Specials"
+                },
+                {
+                    id: 'slide-5',
+                    title: "New Arrivals",
+                    subtitle: "Explore trending items",
+                    badge: "Just In",
+                    bgGradient: "from-purple-600 to-indigo-600",
+                    bgImage: "",
+                    linkType: "category",
+                    linkTarget: "New",
+                    infoTitle: "Brand New Imported Goods",
+                    infoDescription: "Discover our newest inventory straight from Korea, Japan, and international markets. Be the first to try trending flavors!",
+                    relatedImage: "https://placehold.co/600x300/7c3aed/ffffff?text=New+Arrivals"
+                }
+            ],
+            categories: {
+                'Everyday\'s Sale': ['Deals', 'Discounts'],
+                'Fresh Produce': ['Vegetables', 'Fruits', 'Organic'],
+                'Seafood Market': ['Fish', 'Crab', 'Shrimp'],
+                'Meat Specials': ['Beef', 'Pork', 'Chicken'],
+                'Korea Direct': ['Noodles', 'Snacks', 'Sauces'],
+                'New': ['Latest', 'Trending']
+            },
+            brandCircles: [
+                { id: 1, name: "CJR", image: "https://placehold.co/100x100/ffffff/dc2626?text=CJR", link: "#" },
+                { id: 2, name: "Nongshim", image: "https://placehold.co/100x100/ffffff/dc2626?text=Nongshim", link: "#" },
+                { id: 3, name: "Dongwon", image: "https://placehold.co/100x100/ffffff/dc2626?text=Dongwon", link: "#" },
+                { id: 4, name: "Orion", image: "https://placehold.co/100x100/ffffff/dc2626?text=Orion", link: "#" },
+                { id: 5, name: "Samlip", image: "https://placehold.co/100x100/ffffff/dc2626?text=Samlip", link: "#" }
+            ],
+            customSections: [
+                { id: 'sec-default-1', title: 'H Mart Specials', description: 'Curated daily top picks and exclusive deals', productIds: [] }
+            ],
+            headerLinks: ['Track Order', 'Store Locator', 'Customer Service'],
+            footerLinks1: ['Contact Us', 'FAQ', 'Shipping Policy'],
+            footerLinks2: ['Our Story', 'Careers']
         };
 
         let productsList = [];
 
+        // App Initialization & Supabase Fetching
         async function initApp() {
+            updateAdminCurrencyLabels();
             renderCategoryNav();
+            renderRecommendedSubcats();
+            startTopCardsAutoScroll();
             
-            const supabaseUrl = 'https://nouupslkmktwsovdyadg.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdXVwc2xrbWt0d3NvdmR5YWRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTI1NjIsImV4cCI6MjEwNTk4ODU2Mn0.89GAlI0DCHTupvy5mcQcOT8UHv80h07FeZMpnZpHLmk';
-
             if (window.supabase) {
                 try {
                     supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                    showToast("Connected to Supabase Cloud", "success");
-                    
-                    await Promise.all([
-                        fetchStoreSettingsFromSupabase(),
-                        fetchProductsFromSupabase()
-                    ]);
-                } catch (e) {
-                    console.error("Supabase init error:", e);
+                    await fetchStoreSettings();
+                    await fetchProductsFromSupabase();
+                } catch (e) { 
+                    applyStorefrontUI(); 
                 }
             } else {
-                renderProducts();
+                applyStorefrontUI();
+                renderAllProductSections();
             }
             lucide.createIcons();
-            applyStoreSettings();
-        }
-
-        async function fetchStoreSettingsFromSupabase() {
-            if (!supabaseClient) return;
-            try {
-                const { data, error } = await supabaseClient
-                    .from('store_settings')
-                    .select('*')
-                    .eq('id', 1)
-                    .single();
-                
-                if (data) {
-                    if (data.store_name) storeConfig.storeName = data.store_name;
-                    if (data.logo_url) storeConfig.logoUrl = data.logo_url;
-                    if (data.hide_local_buy !== undefined) storeConfig.hideLocalBuy = data.hide_local_buy;
-                    applyStoreSettings();
-                }
-            } catch (err) {
-                console.warn("Notice: Store settings table query.", err.message);
-            }
+            renderAdminCategories();
+            renderAdminBrandCircles();
+            renderAdminTopSlides();
         }
 
         async function fetchProductsFromSupabase() {
             if (!supabaseClient) return;
             try {
                 const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-                if (data) {
+                if (!error && data) {
                     productsList = data;
                 }
             } catch (err) {
-                console.warn("Could not load from Supabase products table.", err);
+                console.error("Error fetching products:", err);
             } finally {
-                renderProducts();
+                renderAllProductSections();
                 renderAdminProductTable();
             }
+        }
+
+        // Slideshow auto scroll
+        function startTopCardsAutoScroll() {
+            const container = document.getElementById('top-cards-slideshow');
+            if (!container) return;
+            container.addEventListener('mouseenter', () => { if (topSlideshowInterval) clearInterval(topSlideshowInterval); });
+            container.addEventListener('mouseleave', () => { runTopSlideshowTimer(); });
+            runTopSlideshowTimer();
+        }
+
+        function runTopSlideshowTimer() {
+            if (topSlideshowInterval) clearInterval(topSlideshowInterval);
+            topSlideshowInterval = setInterval(() => {
+                const container = document.getElementById('top-cards-slideshow');
+                if (!container) return;
+                const maxScrollLeft = container.scrollWidth - container.clientWidth;
+                if (container.scrollLeft >= maxScrollLeft - 10) {
+                    container.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    container.scrollBy({ left: 260, behavior: 'smooth' });
+                }
+            }, 3200);
+        }
+
+        function handleCurrencyChange(val) {
+            activeCurrency = val;
+            updateAdminCurrencyLabels();
+            renderAllProductSections();
+            renderAdminProductTable();
+            updateCartUI();
+            showToast(`Currency updated to ${val}`, "success");
+        }
+
+        function updateAdminCurrencyLabels() {
+            const cur = activeCurrency;
+            const elTable = document.getElementById('admin-table-currency-label');
+            if (elTable) elTable.innerText = cur;
+            const elPrice = document.getElementById('label-prod-price');
+            if (elPrice) elPrice.innerText = `Price (in ${cur}) *`;
+        }
+
+        function formatPrice(baseUsdPrice) {
+            if (baseUsdPrice === undefined || baseUsdPrice === null || isNaN(baseUsdPrice)) return '';
+            const curr = currencies[activeCurrency] || currencies.USD;
+            const converted = (parseFloat(baseUsdPrice) * curr.rate).toFixed(2);
+            return `${curr.symbol}${converted}`;
+        }
+
+        async function fetchStoreSettings() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient.from('store_settings').select('config').eq('id', 1).single();
+                if (data && data.config) {
+                    if(!data.config.categories) data.config.categories = storeConfig.categories;
+                    if(!data.config.brandCircles) data.config.brandCircles = storeConfig.brandCircles;
+                    if(!data.config.customSections) data.config.customSections = storeConfig.customSections;
+                    if(!data.config.topSlideshowCards) data.config.topSlideshowCards = storeConfig.topSlideshowCards;
+                    storeConfig = { ...storeConfig, ...data.config };
+                }
+            } catch (err) {
+                await saveStorefrontConfigToSupabase();
+            } finally { 
+                applyStorefrontUI(); 
+                renderAdminCategories();
+                renderAdminBrandCircles();
+                renderAdminTopSlides();
+            }
+        }
+
+        function applyStorefrontUI() {
+            const hIcon = document.getElementById('header-default-icon');
+            const customLogo = document.getElementById('header-custom-logo');
+            const footerLogoPreview = document.getElementById('footer-logo-preview');
+            const footerDefaultIcon = document.getElementById('footer-default-icon');
+            
+            // Header Logo Display Logic
+            if (storeConfig.logoUrl && storeConfig.logoUrl.trim() !== '') {
+                hIcon.classList.add('hidden');
+                customLogo.src = storeConfig.logoUrl.trim();
+                customLogo.classList.remove('hidden');
+            } else {
+                hIcon.classList.remove('hidden');
+                customLogo.classList.add('hidden');
+            }
+
+            // Footer Logo Display Logic
+            if (storeConfig.footerLogoUrl && storeConfig.footerLogoUrl.trim() !== '') {
+                footerDefaultIcon.classList.add('hidden');
+                footerLogoPreview.src = storeConfig.footerLogoUrl.trim();
+                footerLogoPreview.classList.remove('hidden');
+            } else {
+                footerDefaultIcon.classList.remove('hidden');
+                footerLogoPreview.classList.add('hidden');
+            }
+
+            document.getElementById('promo-banner-title').innerText = storeConfig.promoBanner.title;
+            document.getElementById('promo-banner-subtitle').innerText = storeConfig.promoBanner.subtitle;
+            document.getElementById('promo-banner-btn').innerText = storeConfig.promoBanner.buttonText;
+            document.getElementById('promo-banner-link').href = storeConfig.promoBanner.link;
+
+            renderTopSlideshowCards();
+            renderBrandCircles();
+            renderCategoryNav();
+            renderRecommendedSubcats();
+
+            document.getElementById('dynamic-header-links').innerHTML = storeConfig.headerLinks.map(link => `<a href="#" class="hover:underline">${link.trim()}</a>`).join('');
+            document.getElementById('dynamic-footer-links-1').innerHTML = storeConfig.footerLinks1.map(link => `<li><a href="#" class="hover:text-brand-600">${link.trim()}</a></li>`).join('');
+            document.getElementById('dynamic-footer-links-2').innerHTML = storeConfig.footerLinks2.map(link => `<li><a href="#" class="hover:text-brand-600">${link.trim()}</a></li>`).join('');
+            
+            renderCustomAdminSections();
+            lucide.createIcons();
+            renderAllProductSections(); 
+        }
+
+        // FILE UPLOAD AND PREVIEW HANDLERS FOR ADMIN LOGOS
+        function handleHeaderLogoFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64Url = evt.target.result;
+                document.getElementById('setting-logo-url').value = base64Url;
+                updateLogoPreviews();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleFooterLogoFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64Url = evt.target.result;
+                document.getElementById('setting-footer-logo-url').value = base64Url;
+                updateLogoPreviews();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateLogoPreviews() {
+            const headerUrl = document.getElementById('setting-logo-url').value.trim();
+            const footerUrl = document.getElementById('setting-footer-logo-url').value.trim();
+
+            const hPreview = document.getElementById('header-logo-preview');
+            const hPlaceholder = document.getElementById('header-logo-placeholder');
+            if (headerUrl) {
+                hPreview.src = headerUrl;
+                hPreview.classList.remove('hidden');
+                hPlaceholder.classList.add('hidden');
+            } else {
+                hPreview.classList.add('hidden');
+                hPlaceholder.classList.remove('hidden');
+            }
+
+            const fPreview = document.getElementById('footer-logo-preview-box');
+            const fPlaceholder = document.getElementById('footer-logo-placeholder');
+            if (footerUrl) {
+                fPreview.src = footerUrl;
+                fPreview.classList.remove('hidden');
+                fPlaceholder.classList.add('hidden');
+            } else {
+                fPreview.classList.add('hidden');
+                fPlaceholder.classList.remove('hidden');
+            }
+        }
+
+        // RENDER TOP SLIDESHOW CARDS DYNAMICALLY
+        function renderTopSlideshowCards() {
+            const container = document.getElementById('top-cards-slideshow');
+            if(!container) return;
+            const slides = storeConfig.topSlideshowCards || [];
+            
+            container.innerHTML = slides.map(slide => {
+                const bgStyle = slide.bgImage && slide.bgImage.trim() !== '' 
+                    ? `background-image: url('${slide.bgImage}'); background-size: cover; background-position: center;` 
+                    : '';
+                const gradientClass = (!slide.bgImage || slide.bgImage.trim() === '') ? `bg-gradient-to-r ${slide.bgGradient || 'from-red-500 to-amber-500'}` : '';
+
+                return `
+                    <div onclick="handleTopSlideClick('${slide.id}')" style="${bgStyle}" class="min-w-[200px] sm:min-w-[240px] h-32 ${gradientClass} rounded-2xl p-4 text-white flex flex-col justify-between shadow-sm hover:shadow-md cursor-pointer transition-all shrink-0 relative overflow-hidden">
+                        ${slide.bgImage && slide.bgImage.trim() !== '' ? '<div class="absolute inset-0 bg-slate-900/40 z-0"></div>' : ''}
+                        <div class="flex justify-between items-start relative z-10">
+                            <span class="text-xs uppercase font-extrabold tracking-wider bg-white/20 px-2 py-0.5 rounded">${slide.badge || 'Special'}</span>
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <h3 class="font-black text-lg leading-tight">${slide.title}</h3>
+                            <p class="text-xs opacity-90">${slide.subtitle}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function handleTopSlideClick(slideId) {
+            const slides = storeConfig.topSlideshowCards || [];
+            const slide = slides.find(s => s.id === slideId);
+            if(!slide) return;
+
+            if (slide.linkType === 'category') {
+                selectCategory(slide.linkTarget || 'All');
+            } else if (slide.linkType === 'url') {
+                if(slide.linkTarget) window.open(slide.linkTarget, '_blank');
+            } else {
+                const content = document.getElementById('slide-info-content');
+                content.innerHTML = `
+                    <h3 class="text-xl font-black text-slate-900">${slide.infoTitle || slide.title}</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">${slide.infoDescription || slide.subtitle}</p>
+                    ${slide.relatedImage ? `<div class="w-full h-48 rounded-xl overflow-hidden border border-slate-200 mt-3"><img src="${slide.relatedImage}" class="w-full h-full object-cover"></div>` : ''}
+                    <div class="pt-4 flex justify-end">
+                        <button onclick="closeModal('slide-info-modal')" class="px-5 py-2.5 bg-brand-600 text-white rounded-lg font-bold text-xs">Close</button>
+                    </div>
+                `;
+                openModal('slide-info-modal');
+                lucide.createIcons();
+            }
+        }
+
+        function renderAdminTopSlides() {
+            const container = document.getElementById('admin-top-slides-container');
+            if(!container) return;
+            const slides = storeConfig.topSlideshowCards || [];
+
+            container.innerHTML = slides.map((slide, idx) => `
+                <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 space-y-3 top-slide-admin-row" data-index="${idx}" data-id="${slide.id}">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                        <span class="font-bold text-slate-900 text-xs">Slide #${idx + 1} (${slide.title})</span>
+                        <button type="button" onclick="removeTopSlideCard(${idx})" class="text-red-500 hover:underline text-xs font-bold">Delete Slide</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Title</label>
+                            <input type="text" value="${slide.title || ''}" class="slide-title-input w-full p-2 text-xs border rounded bg-white font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Subtitle</label>
+                            <input type="text" value="${slide.subtitle || ''}" class="slide-subtitle-input w-full p-2 text-xs border rounded bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Badge Text</label>
+                            <input type="text" value="${slide.badge || ''}" class="slide-badge-input w-full p-2 text-xs border rounded bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Gradient Colors (Tailwind e.g. from-red-500 to-amber-500)</label>
+                            <input type="text" value="${slide.bgGradient || ''}" class="slide-gradient-input w-full p-2 text-xs border rounded bg-white">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Background Image URL (Optional overrides gradient)</label>
+                            <input type="text" value="${slide.bgImage || ''}" class="slide-bgimage-input w-full p-2 text-xs border rounded bg-white" placeholder="https://example.com/bg.jpg">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Click Action Type</label>
+                            <select class="slide-linktype-input w-full p-2 text-xs border rounded bg-white" onchange="toggleSlideTargetInput(this)">
+                                <option value="category" ${slide.linkType === 'category' ? 'selected' : ''}>Filter Category</option>
+                                <option value="url" ${slide.linkType === 'url' ? 'selected' : ''}>External URL Link</option>
+                                <option value="info" ${slide.linkType === 'info' ? 'selected' : ''}>Open Info / Related Photos Modal</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Link Target / Category Name / URL</label>
+                            <input type="text" value="${slide.linkTarget || ''}" class="slide-linktarget-input w-full p-2 text-xs border rounded bg-white">
+                        </div>
+                        <div class="sm:col-span-3 border-t pt-2 mt-1">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Modal Info Title (If Info type selected)</label>
+                            <input type="text" value="${slide.infoTitle || ''}" class="slide-infotitle-input w-full p-2 text-xs border rounded bg-white mb-2">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Modal Info Description & Details</label>
+                            <textarea class="slide-infodesc-input w-full p-2 text-xs border rounded bg-white" rows="2">${slide.infoDescription || ''}</textarea>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1 mt-2">Related Image / Photo URL for Modal</label>
+                            <input type="text" value="${slide.relatedImage || ''}" class="slide-relimage-input w-full p-2 text-xs border rounded bg-white" placeholder="https://example.com/related.jpg">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addTopSlideCardRow() {
+            if(!storeConfig.topSlideshowCards) storeConfig.topSlideshowCards = [];
+            storeConfig.topSlideshowCards.push({
+                id: 'slide-' + Date.now(),
+                title: "New Promotion",
+                subtitle: "Discover new offers",
+                badge: "Hot",
+                bgGradient: "from-blue-600 to-indigo-600",
+                bgImage: "",
+                linkType: "category",
+                linkTarget: "All",
+                infoTitle: "New Promotion Info",
+                infoDescription: "Details about this special promotion.",
+                relatedImage: ""
+            });
+            renderAdminTopSlides();
+        }
+
+        function removeTopSlideCard(index) {
+            storeConfig.topSlideshowCards.splice(index, 1);
+            renderAdminTopSlides();
+        }
+
+        function collectTopSlidesFromAdmin() {
+            const rows = document.querySelectorAll('.top-slide-admin-row');
+            const updatedSlides = [];
+            rows.forEach(row => {
+                const id = row.getAttribute('data-id');
+                const title = row.querySelector('.slide-title-input').value;
+                const subtitle = row.querySelector('.slide-subtitle-input').value;
+                const badge = row.querySelector('.slide-badge-input').value;
+                const bgGradient = row.querySelector('.slide-gradient-input').value;
+                const bgImage = row.querySelector('.slide-bgimage-input').value;
+                const linkType = row.querySelector('.slide-linktype-input').value;
+                const linkTarget = row.querySelector('.slide-linktarget-input').value;
+                const infoTitle = row.querySelector('.slide-infotitle-input').value;
+                const infoDescription = row.querySelector('.slide-infodesc-input').value;
+                const relatedImage = row.querySelector('.slide-relimage-input').value;
+
+                updatedSlides.push({ id, title, subtitle, badge, bgGradient, bgImage, linkType, linkTarget, infoTitle, infoDescription, relatedImage });
+            });
+            storeConfig.topSlideshowCards = updatedSlides;
+        }
+
+        function renderBrandCircles() {
+            const container = document.getElementById('dynamic-brand-circles');
+            if (!container) return;
+            const circles = storeConfig.brandCircles || [];
+            container.innerHTML = circles.map(brand => `
+                <a href="${brand.link || '#'}" onclick="searchQuery='${brand.name}'; renderAllProductSections(); return false;" class="flex flex-col items-center gap-1.5 cursor-pointer group min-w-[70px] text-center">
+                    <div class="w-14 h-14 rounded-full border border-slate-200 bg-white flex items-center justify-center group-hover:border-brand-600 transition-colors shadow-sm overflow-hidden p-1">
+                        <img src="${brand.image}" class="w-full h-full object-contain rounded-full">
+                    </div>
+                    <span class="text-[11px] font-semibold text-slate-700 group-hover:text-brand-600 truncate max-w-[80px]">${brand.name}</span>
+                </a>
+            `).join('');
         }
 
         function renderCategoryNav() {
             const container = document.getElementById('category-nav-container');
             let html = `
-                <button onclick="selectCategory('All')" 
-                        class="px-2.5 py-1 rounded-lg transition-all font-semibold text-xs ${activeCategory === 'All' ? 'bg-brand-600 text-white shadow-xs' : 'hover:bg-slate-800 text-slate-300'}">
-                    All Products
-                </button>
+                <div class="flex flex-col items-center gap-1.5 cursor-pointer group min-w-[60px]" onclick="selectCategory('All')">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 ${activeCategory === 'All' ? 'border-brand-600 text-brand-600 bg-brand-50' : 'border-slate-100 bg-slate-50 text-slate-500 group-hover:border-brand-600'} flex items-center justify-center transition-colors">
+                        <i data-lucide="layout-grid" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                    </div>
+                    <span class="text-[10px] sm:text-xs font-bold ${activeCategory === 'All' ? 'text-brand-600' : 'text-slate-600'} text-center">All</span>
+                </div>
             `;
-
-            Object.keys(categoriesData).forEach(cat => {
-                const subcats = categoriesData[cat];
+            const iconMap = { 'Everyday\'s Sale': 'badge-percent', 'Fresh Produce': 'carrot', 'Seafood Market': 'fish', 'Meat Specials': 'drumstick', 'Korea Direct': 'globe', 'New': 'sparkles' };
+            Object.keys(storeConfig.categories).forEach(cat => {
                 const isActive = activeCategory === cat;
-
+                const iconName = iconMap[cat] || 'tag';
                 html += `
-                    <div class="dropdown-parent relative inline-block">
-                        <button onclick="selectCategory('${cat}')" 
-                                class="flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all font-semibold text-xs ${isActive ? 'bg-brand-600 text-white shadow-xs' : 'hover:bg-slate-800 text-slate-300'}">
-                            <span>${cat}</span>
-                            ${subcats.length > 0 ? '<i data-lucide="chevron-down" class="w-3 h-3 opacity-70"></i>' : ''}
-                        </button>
-                        ${subcats.length > 0 ? `
-                            <div class="dropdown-menu absolute left-0 top-full mt-1 w-44 bg-slate-900 border border-slate-800 rounded-xl shadow-xl z-50 py-1">
-                                ${subcats.map(sub => `
-                                    <a href="#" onclick="selectCategory('${cat}', '${sub}'); return false;" 
-                                       class="block px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-brand-600/30 transition-colors font-medium">
-                                        ${sub}
-                                    </a>
-                                `).join('')}
-                            </div>
-                        ` : ''}
+                    <div class="flex flex-col items-center gap-1.5 cursor-pointer group min-w-[60px]" onclick="selectCategory('${cat}')">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 ${isActive ? 'border-brand-600 text-brand-600 bg-brand-50' : 'border-slate-100 bg-slate-50 text-slate-500 group-hover:border-brand-600'} flex items-center justify-center transition-colors shadow-sm overflow-hidden">
+                            <i data-lucide="${iconName}" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                        </div>
+                        <span class="text-[10px] sm:text-xs font-bold ${isActive ? 'text-brand-600' : 'text-slate-600'} text-center whitespace-nowrap">${cat}</span>
                     </div>
                 `;
             });
-
             container.innerHTML = html;
             lucide.createIcons();
             populateCategorySelects();
         }
 
+        function renderRecommendedSubcats() {
+            const bar = document.getElementById('recommended-subcats-bar');
+            if(!bar) return;
+            const cats = Object.keys(storeConfig.categories);
+            let html = `<button onclick="selectCategory('All')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeCategory === 'All' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">All</button>`;
+            cats.forEach(cat => {
+                const isActive = activeCategory === cat;
+                html += `<button onclick="selectCategory('${cat}')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${isActive ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${cat}</button>`;
+            });
+            bar.innerHTML = html;
+        }
+
         function populateCategorySelects() {
             const catSelect = document.getElementById('prod-category');
-            const mainCatSelect = document.getElementById('target-main-cat-select');
-            
-            if (catSelect) {
-                catSelect.innerHTML = Object.keys(categoriesData).map(c => `<option value="${c}">${c}</option>`).join('');
-                updateSubcategoryDropdown();
-            }
-            if (mainCatSelect) {
-                mainCatSelect.innerHTML = Object.keys(categoriesData).map(c => `<option value="${c}">${c}</option>`).join('');
-            }
-            renderCategoryTree();
+            if(!catSelect) return;
+            catSelect.innerHTML = Object.keys(storeConfig.categories).map(c => `<option value="${c}">${c}</option>`).join('');
+            updateSubcategoryDropdown();
         }
 
         function updateSubcategoryDropdown() {
             const selectedCat = document.getElementById('prod-category').value;
             const subSelect = document.getElementById('prod-subcategory');
-            const subcats = categoriesData[selectedCat] || [];
-            subSelect.innerHTML = subcats.map(s => `<option value="${s}">${s}</option>`).join('');
+            if(!subSelect) return;
+            subSelect.innerHTML = (storeConfig.categories[selectedCat] || []).map(s => `<option value="${s}">${s}</option>`).join('');
         }
 
-        function renderProducts() {
-            const grid = document.getElementById('product-grid');
-            const emptyState = document.getElementById('empty-state');
-            
+        function getImagesArray(imgString) {
+            if (!imgString || String(imgString).trim() === '') return ['https://placehold.co/400x400/f8fafc/94a3b8?text=No+Image'];
+            return String(imgString).split(',').map(url => url.trim()).filter(url => url.length > 0);
+        }
+
+        function renderCardHTML(product) {
+            const finalPrice = formatPrice(product.price);
+            const origPrice = product.original_price ? formatPrice(product.original_price) : null;
+            const primaryImage = getImagesArray(product.image_url)[0];
+
+            let badgesHTML = '';
+            if (product.badge) {
+                badgesHTML = product.badge.split(',').map(b => `<span class="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">${b.trim()}</span>`).join(' ');
+            }
+
+            return `
+                <div class="min-w-[190px] sm:min-w-[210px] max-w-[210px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-200 flex flex-col justify-between p-3.5 relative group shrink-0">
+                    <div class="absolute top-3 left-3 z-10 flex flex-col items-start gap-1">${badgesHTML}</div>
+                    <div class="w-full h-36 sm:h-40 flex items-center justify-center cursor-pointer mb-2 relative" onclick="openProductModal('${product.id}')">
+                        <img src="${primaryImage}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-baseline gap-2 mb-1">
+                                <span class="font-black text-brand-600 text-base sm:text-lg">${finalPrice}</span>
+                                ${origPrice ? `<span class="text-xs text-slate-400 line-through font-medium">${origPrice}</span>` : ''}
+                            </div>
+                            ${product.brand ? `<span class="inline-block bg-red-50 text-brand-600 text-[10px] font-bold px-2 py-0.5 rounded mb-1.5 uppercase">${product.brand}</span>` : ''}
+                            <h3 onclick="openProductModal('${product.id}')" class="text-xs font-medium text-slate-800 line-clamp-2 hover:text-brand-600 cursor-pointer leading-snug mb-2">${product.name}</h3>
+                        </div>
+                        <button type="button" onclick="addToCart('${product.id}')" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-full text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 mt-2">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAllProductSections() {
             let filtered = productsList.filter(p => {
                 const matchesCat = activeCategory === 'All' || p.category === activeCategory;
                 const matchesSubcat = !activeSubcategory || p.subcategory === activeSubcategory;
                 const matchesSearch = !searchQuery || 
-                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                    p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    p.category.toLowerCase().includes(searchQuery.toLowerCase());
+                    (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+                    (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()));
                 return matchesCat && matchesSubcat && matchesSearch;
             });
 
-            filtered.sort((a, b) => {
-                if (currentSort === 'price-low') return a.price - b.price;
-                if (currentSort === 'price-high') return b.price - a.price;
-                if (currentSort === 'rating') return b.rating - a.rating;
-                if (currentSort === 'name') return a.name.localeCompare(b.name);
-                return 0;
-            });
-
-            document.getElementById('total-products-count').innerText = `${filtered.length} Items`;
-            
-            let titleText = activeCategory === 'All' ? 'All Catalog Products' : activeCategory;
-            if (activeSubcategory) titleText += ` → ${activeSubcategory}`;
-            document.getElementById('active-category-title').innerText = titleText;
-
-            if (filtered.length === 0) {
-                grid.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                return;
+            const sliderContainer = document.getElementById('product-slider-container');
+            if (sliderContainer) {
+                sliderContainer.innerHTML = filtered.length > 0 ? filtered.map(p => renderCardHTML(p)).join('') : '<p class="text-xs text-slate-400 p-4">No products found. Add products from the Admin Console.</p>';
             }
 
-            emptyState.classList.add('hidden');
-
-            grid.innerHTML = filtered.map(product => {
-                const formattedPrice = '₹' + Number(product.price).toLocaleString('en-IN');
-                
-                let discountHtml = product.discount > 0 ? `<div class="absolute top-2 right-2 bg-rose-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-xs">${product.discount}% OFF</div>` : '';
-                let offerHtml = product.offer ? `<p class="text-[9px] sm:text-[10px] text-emerald-600 font-bold mt-0.5 bg-emerald-50 inline-block px-1 py-0.5 rounded truncate max-w-full">${product.offer}</p>` : '';
-
-                return `
-                    <div class="bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden group">
-                        <div class="relative h-36 sm:h-48 bg-slate-100/70 overflow-hidden flex items-center justify-center p-2.5 sm:p-4">
-                            <img src="${product.image_url || 'https://placehold.co/400x300/f1f5f9/94a3b8?text=Product+Photo'}" 
-                                 alt="${product.name}" 
-                                 onerror="this.src='https://placehold.co/400x300/f1f5f9/94a3b8?text=Image+Not+Found'"
-                                 class="max-h-full w-full object-contain group-hover:scale-105 transition-transform duration-300">
-                            
-                            <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-md text-slate-700 border border-slate-200 shadow-xs truncate max-w-[80%]">
-                                ${product.subcategory || product.category}
-                            </span>
-                            ${discountHtml}
-
-                            <div class="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px] hidden sm:flex items-center justify-center p-4">
-                                <button onclick="openQuickView('${product.id}')" class="px-3.5 py-1.5 bg-white text-slate-900 font-bold text-xs rounded-xl shadow-lg hover:bg-brand-600 hover:text-white transition-all flex items-center gap-1">
-                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i> Quick View
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="p-3 sm:p-4 flex-1 flex flex-col justify-between space-y-2">
-                            <div class="space-y-1">
-                                <div class="flex items-center justify-between text-[10px] sm:text-xs">
-                                    <span class="text-slate-400 font-semibold uppercase tracking-wider text-[9px] truncate">${product.category}</span>
-                                    <div class="flex items-center gap-0.5 text-amber-500 font-extrabold text-[10px] sm:text-xs">
-                                        <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
-                                        <span>${product.rating}</span>
-                                    </div>
-                                </div>
-                                <h3 onclick="openQuickView('${product.id}')" class="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2 hover:text-brand-600 transition-colors cursor-pointer">
-                                    ${product.name}
-                                </h3>
-                                ${offerHtml}
-                            </div>
-
-                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
-                                <div>
-                                    <span class="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Price</span>
-                                    <span class="text-xs sm:text-base font-black text-slate-900">${formattedPrice}</span>
-                                </div>
-                                <div class="flex items-center gap-1">
-                                    <button onclick="openQuickView('${product.id}')" class="sm:hidden p-1.5 bg-slate-100 text-slate-700 text-xs rounded-lg">
-                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                    <a href="${product.buy_link || '#'}" target="_blank" rel="noopener font-bold" class="px-2.5 py-1.5 sm:px-3.5 sm:py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg sm:rounded-xl transition-all shadow-xs flex items-center gap-0.5">
-                                        <span>Buy</span>
-                                        <i data-lucide="arrow-up-right" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            lucide.createIcons();
-            applyStoreSettings();
-        }
-
-        function handleSearchInput(val) {
-            searchQuery = val.trim();
-            document.getElementById('main-search-input').value = val;
-            document.getElementById('mobile-search-input').value = val;
-
-            const hasVal = Boolean(searchQuery);
-            document.getElementById('clear-search-btn').classList.toggle('hidden', !hasVal);
-            document.getElementById('mobile-clear-search-btn').classList.toggle('hidden', !hasVal);
-
-            renderProducts();
-        }
-
-        function clearSearch() {
-            document.getElementById('main-search-input').value = '';
-            document.getElementById('mobile-search-input').value = '';
-            searchQuery = '';
-            document.getElementById('clear-search-btn').classList.add('hidden');
-            document.getElementById('mobile-clear-search-btn').classList.add('hidden');
-            renderProducts();
-        }
-
-        function selectCategory(cat, sub = null) {
-            activeCategory = cat;
-            activeSubcategory = sub;
-            renderCategoryNav();
-            renderProducts();
-        }
-
-        function resetFilters() {
-            activeCategory = 'All';
-            activeSubcategory = null;
-            clearSearch();
-            renderCategoryNav();
-            renderProducts();
-        }
-
-        function handleSortChange(val) {
-            currentSort = val;
-            renderProducts();
-        }
-
-        function openQuickView(id) {
-            const product = productsList.find(p => String(p.id) === String(id));
-            if (!product) return;
-
-            document.getElementById('qv-image').src = product.image_url || 'https://placehold.co/400x300';
-            document.getElementById('qv-category-badge').innerText = product.category;
-            document.getElementById('qv-subcategory-tag').innerText = product.subcategory || product.category;
-            document.getElementById('qv-rating').innerText = product.rating;
-            document.getElementById('qv-title').innerText = product.name;
-            document.getElementById('qv-price').innerText = '₹' + Number(product.price).toLocaleString('en-IN');
-            document.getElementById('qv-description').innerText = product.description;
-            
-            document.getElementById('qv-sold').innerHTML = `<i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Sold: ${product.sold || 0}`;
-            document.getElementById('qv-left').innerHTML = `<i data-lucide="box" class="w-3.5 h-3.5"></i> Left: ${product.stock || 0}`;
-
-            const badge = document.getElementById('qv-discount-badge');
-            if(product.discount > 0) {
-                badge.innerText = `${product.discount}% OFF`;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-
-            const offerTxt = document.getElementById('qv-offer-text');
-            if(product.offer) {
-                offerTxt.innerText = product.offer;
-                offerTxt.classList.remove('hidden');
-            } else {
-                offerTxt.classList.add('hidden');
-            }
-            
-            const buyBtn = document.getElementById('qv-buy-btn');
-            buyBtn.href = product.buy_link || '#';
-
-            const cartBtn = document.getElementById('qv-cart-btn');
-            cartBtn.onclick = () => addToCart(product);
-            
-            if(storeConfig.hideLocalBuy) {
-                cartBtn.style.display = 'none';
-            } else {
-                cartBtn.style.display = 'flex';
-            }
-
-            openModal('quickview-modal');
+            renderCustomAdminSectionsContent();
             lucide.createIcons();
         }
 
-        function addToCart(product) {
-            cart.push(product);
-            document.getElementById('cart-count-badge').innerText = cart.length;
-            showToast(`Added to Cart`, "success");
-            renderCartModal();
-        }
-
-        function renderCartModal() {
-            const container = document.getElementById('cart-items-container');
-            const totalEl = document.getElementById('cart-total-price');
-
-            if (cart.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-10 text-slate-400 space-y-2">
-                        <i data-lucide="shopping-bag" class="w-8 h-8 mx-auto"></i>
-                        <p class="text-xs font-medium">Your cart is empty</p>
-                    </div>
-                `;
-                totalEl.innerText = '₹0';
-                lucide.createIcons();
-                return;
-            }
-
-            let total = 0;
-            container.innerHTML = cart.map((item, idx) => {
-                total += Number(item.price);
-                return `
-                    <div class="flex items-center gap-2.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                        <img src="${item.image_url}" class="w-10 h-10 rounded-lg object-cover bg-white shrink-0">
-                        <div class="flex-1 min-w-0">
-                            <h4 class="font-bold text-xs text-slate-900 truncate">${item.name}</h4>
-                            <p class="text-xs font-black text-brand-600">₹${Number(item.price).toLocaleString('en-IN')}</p>
-                        </div>
-                        <button onclick="removeFromCart(${idx})" class="p-1 text-slate-400 hover:text-rose-600">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-
-            totalEl.innerText = '₹' + total.toLocaleString('en-IN');
-            lucide.createIcons();
-        }
-
-        function removeFromCart(idx) {
-            cart.splice(idx, 1);
-            document.getElementById('cart-count-badge').innerText = cart.length;
-            renderCartModal();
-        }
-
-        function openCartModal() {
-            renderCartModal();
-            openModal('cart-modal');
-        }
-
-        function checkoutCart() {
-            if (cart.length === 0) return;
-            alert(`Order Processed! Total items: ${cart.length}`);
-            cart = [];
-            document.getElementById('cart-count-badge').innerText = '0';
-            closeModal('cart-modal');
-            showToast("Thank you for your purchase!", "success");
-        }
-
-        function handleAdminNavClick() {
-            if (isAdminLoggedIn) {
-                openAdminDashboard();
-            } else {
-                openModal('admin-auth-modal');
-            }
-        }
-
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            isAdminLoggedIn = true;
-            document.getElementById('login-error-msg').classList.add('hidden');
-            closeModal('admin-auth-modal');
-            
-            document.getElementById('nav-admin-btn-text').innerText = 'Dashboard';
-            showToast("Logged in successfully!", "success");
-            openAdminDashboard();
-        }
-
-        function logoutAdmin() {
-            isAdminLoggedIn = false;
-            document.getElementById('nav-admin-btn-text').innerText = 'Sign in';
-            closeModal('admin-dashboard-modal');
-            showToast("Logged out", "info");
-        }
-
-        function openAdminDashboard() {
-            renderAdminProductTable();
-            populateCategorySelects();
-            
-            document.getElementById('setting-store-name').value = storeConfig.storeName;
-            document.getElementById('setting-hide-local-buy').checked = storeConfig.hideLocalBuy;
-            
-            openModal('admin-dashboard-modal');
-        }
-
-        function switchAdminTab(tabId) {
-            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-                btn.classList.remove('border-brand-600', 'text-brand-600');
-                btn.classList.add('border-transparent', 'text-slate-600');
-            });
-
-            document.getElementById(tabId).classList.remove('hidden');
-            const activeBtn = document.getElementById('tab-btn-' + tabId.replace('tab-', ''));
-            if (activeBtn) {
-                activeBtn.classList.remove('border-transparent', 'text-slate-600');
-                activeBtn.classList.add('border-brand-600', 'text-brand-600');
-            }
-        }
-
-        function renderAdminProductTable() {
-            const tbody = document.getElementById('admin-product-table-body');
-            tbody.innerHTML = productsList.map(item => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3">
-                        <img src="${item.image_url}" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover bg-slate-100 border border-slate-200 shrink-0">
-                        <div class="min-w-0">
-                            <span class="font-bold text-slate-900 block truncate text-xs">${item.name}</span>
-                            <span class="text-[9px] text-slate-400">ID: ${item.id}</span>
-                        </div>
-                    </td>
-                    <td class="p-2.5 sm:p-3 text-slate-600 font-semibold hidden sm:table-cell">${item.category}</td>
-                    <td class="p-2.5 sm:p-3 font-black text-slate-900 text-xs">₹${Number(item.price).toLocaleString('en-IN')}</td>
-                    <td class="p-2.5 sm:p-3 text-[10px] text-slate-500 hidden md:table-cell">
-                        <div>Sold: ${item.sold || 0} | Stock: ${item.stock || 0}</div>
-                    </td>
-                    <td class="p-2.5 sm:p-3 text-right whitespace-nowrap">
-                        <button onclick="editProduct('${item.id}')" class="p-1 text-brand-600 hover:bg-brand-50 rounded-md">
-                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                        </button>
-                        <button onclick="deleteProduct('${item.id}')" class="p-1 text-rose-600 hover:bg-rose-50 rounded-md">
-                            <i data-lucide="trash" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        async function uploadImageToSupabaseStorage(file, bucket = 'product-images') {
-            if (!supabaseClient) {
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(file);
-                });
-            }
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-            const { data, error } = await supabaseClient.storage.from(bucket).upload(fileName, file);
-            if (error) {
-                console.warn("Storage upload error:", error);
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(file);
-                });
-            }
-            const { data: publicUrlData } = supabaseClient.storage.from(bucket).getPublicUrl(fileName);
-            return publicUrlData.publicUrl;
-        }
-
-        async function handleStoreSettingsSave(e) {
-            e.preventDefault();
-            const btn = document.getElementById('save-settings-btn');
-            btn.innerHTML = 'Saving...';
-            
-            storeConfig.storeName = document.getElementById('setting-store-name').value.trim() || 'JRT Mart';
-            storeConfig.hideLocalBuy = document.getElementById('setting-hide-local-buy').checked;
-            
-            const logoFile = document.getElementById('setting-logo-file').files[0];
-            if (logoFile) {
-                const uploadedUrl = await uploadImageToSupabaseStorage(logoFile, 'store-assets');
-                if (uploadedUrl) storeConfig.logoUrl = uploadedUrl;
-            }
-
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('store_settings').upsert({
-                        id: 1,
-                        store_name: storeConfig.storeName,
-                        logo_url: storeConfig.logoUrl,
-                        hide_local_buy: storeConfig.hideLocalBuy,
-                        updated_at: new Date()
-                    });
-                } catch(err) {
-                    console.error("Supabase upsert settings error", err);
-                }
-            }
-
-            applyStoreSettings();
-            showToast("Store settings saved globally!", "success");
-            btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Save Settings';
-            lucide.createIcons();
-        }
-
-        function applyStoreSettings() {
-            document.getElementById('header-store-name').innerText = storeConfig.storeName;
-            
-            if (storeConfig.logoUrl) {
-                document.getElementById('header-default-icon').classList.add('hidden');
-                const customLogo = document.getElementById('header-custom-logo');
-                customLogo.src = storeConfig.logoUrl;
-                customLogo.classList.remove('hidden');
-            }
-            
-            if (storeConfig.hideLocalBuy) {
-                document.getElementById('nav-cart-btn').style.display = 'none';
-            } else {
-                document.getElementById('nav-cart-btn').style.display = 'flex';
-            }
+        function scrollContainer(id, direction) {
+            const container = document.getElementById(id);
+            if(container) container.scrollBy({ left: direction * 240, behavior: 'smooth' });
         }
 
         async function handleProductSubmit(e) {
             e.preventDefault();
-            const submitBtn = document.getElementById('save-prod-btn');
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Saving...";
+            const id = document.getElementById('prod-id').value.trim();
+            const curr = currencies[activeCurrency] || currencies.USD;
+            
+            const enteredPrice = parseFloat(document.getElementById('prod-price').value);
+            const baseUsdPrice = isNaN(enteredPrice) ? 0 : (enteredPrice / curr.rate);
+            
+            const origPriceInput = document.getElementById('prod-original-price').value;
+            const baseUsdOrigPrice = origPriceInput === '' ? null : (parseFloat(origPriceInput) / curr.rate);
 
-            try {
-                const id = document.getElementById('prod-id').value;
-                const title = document.getElementById('prod-title').value.trim();
-                const price = parseFloat(document.getElementById('prod-price').value);
-                const rating = parseFloat(document.getElementById('prod-rating').value);
-                const discount = parseInt(document.getElementById('prod-discount').value) || 0;
-                const sold = parseInt(document.getElementById('prod-sold').value) || 0;
-                const stock = parseInt(document.getElementById('prod-stock').value) || 0;
-                const offer = document.getElementById('prod-offer').value.trim();
-                const category = document.getElementById('prod-category').value;
-                const subcategory = document.getElementById('prod-subcategory').value;
-                const buylink = document.getElementById('prod-buylink').value.trim();
-                const description = document.getElementById('prod-description').value.trim();
-                
-                const fileInput = document.getElementById('prod-file-input');
-                let imageUrl = document.getElementById('prod-image-url').value.trim();
+            const productData = {
+                id: id || 'prod-' + Date.now(),
+                name: document.getElementById('prod-title').value,
+                price: baseUsdPrice,
+                original_price: baseUsdOrigPrice, 
+                brand: document.getElementById('prod-brand').value,
+                badge: document.getElementById('prod-badge').value,
+                category: document.getElementById('prod-category').value,
+                subcategory: document.getElementById('prod-subcategory').value,
+                image_url: document.getElementById('prod-image-url').value, 
+                buy_url: document.getElementById('prod-buylink').value,
+                description: document.getElementById('prod-description').value,
+            };
 
-                if (fileInput.files.length > 0) {
-                    imageUrl = await uploadImageToSupabaseStorage(fileInput.files[0]);
-                }
-
-                if (!imageUrl) {
-                    imageUrl = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80';
-                }
-
-                const productPayload = {
-                    name: title,
-                    price: price,
-                    rating: rating,
-                    discount: discount,
-                    sold: sold,
-                    stock: stock,
-                    offer: offer,
-                    category: category,
-                    subcategory: subcategory,
-                    buy_link: buylink,
-                    description: description,
-                    image_url: imageUrl
-                };
-
-                if (id) {
-                    const idx = productsList.findIndex(p => String(p.id) === String(id));
-                    if (idx !== -1) {
-                        productsList[idx] = { ...productsList[idx], ...productPayload };
+            if (supabaseClient) {
+                try {
+                    const { error } = await supabaseClient.from('products').upsert(productData);
+                    if (error) {
+                        showToast("Error saving to Supabase: " + error.message, "error");
+                        return;
                     }
-                    if (supabaseClient) await supabaseClient.from('products').update(productPayload).eq('id', id);
-                    showToast("Product updated successfully!", "success");
-                } else {
-                    const newId = String(Date.now());
-                    const newProduct = { id: newId, ...productPayload };
-                    productsList.unshift(newProduct);
-                    if (supabaseClient) await supabaseClient.from('products').insert([productPayload]);
-                    showToast("New product added!", "success");
+                } catch (err) {
+                    showToast("Supabase upload error", "error");
+                    return;
                 }
-
-                resetProductForm();
-                renderProducts();
-                renderAdminProductTable();
-                switchAdminTab('tab-manage-products');
-
-            } catch (err) {
-                console.error("Save error:", err);
-                showToast("Error saving product.", "error");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Save & Publish`;
-                lucide.createIcons();
             }
-        }
 
-        function editProduct(id) {
-            const p = productsList.find(item => String(item.id) === String(id));
-            if (!p) return;
-
-            document.getElementById('prod-id').value = p.id;
-            document.getElementById('prod-title').value = p.name;
-            document.getElementById('prod-price').value = p.price;
-            document.getElementById('prod-rating').value = p.rating;
-            document.getElementById('prod-discount').value = p.discount || '';
-            document.getElementById('prod-sold').value = p.sold || '';
-            document.getElementById('prod-stock').value = p.stock || '';
-            document.getElementById('prod-offer').value = p.offer || '';
-            document.getElementById('prod-category').value = p.category;
-            populateCategorySelects();
-            document.getElementById('prod-subcategory').value = p.subcategory || '';
-            document.getElementById('prod-buylink').value = p.buy_link || '';
-            document.getElementById('prod-description').value = p.description || '';
-            document.getElementById('prod-image-url').value = p.image_url || '';
-
-            document.getElementById('form-heading-title').innerText = "Edit Existing Product";
-            document.getElementById('editing-indicator').classList.remove('hidden');
-
-            switchAdminTab('tab-add-product');
+            showToast("Product saved & stored in Supabase successfully!", "success");
+            await fetchProductsFromSupabase();
+            switchAdminTab('tab-manage-products');
         }
 
         async function deleteProduct(id) {
-            if (!confirm("Delete this product?")) return;
-            productsList = productsList.filter(p => String(p.id) !== String(id));
-            if (supabaseClient) await supabaseClient.from('products').delete().eq('id', id);
-            renderProducts();
-            renderAdminProductTable();
-            showToast("Product removed", "info");
+            if (!confirm("Are you sure you want to delete this product?")) return;
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('products').delete().eq('id', id);
+                } catch (err) {}
+            }
+            showToast("Product deleted.", "info");
+            await fetchProductsFromSupabase();
         }
 
-        function resetProductForm() {
-            document.getElementById('prod-id').value = '';
-            document.getElementById('prod-title').value = '';
-            document.getElementById('prod-price').value = '';
-            document.getElementById('prod-rating').value = '';
-            document.getElementById('prod-discount').value = '';
-            document.getElementById('prod-sold').value = '';
-            document.getElementById('prod-stock').value = '';
-            document.getElementById('prod-offer').value = '';
-            document.getElementById('prod-buylink').value = '';
-            document.getElementById('prod-description').value = '';
-            document.getElementById('prod-image-url').value = '';
-            document.getElementById('prod-file-input').value = '';
-            document.getElementById('form-heading-title').innerText = "Add New Product to Store";
-            document.getElementById('editing-indicator').classList.add('hidden');
+        function handleCreateCustomSection(e) {
+            e.preventDefault();
+            const title = document.getElementById('custom-section-title').value.trim();
+            const description = document.getElementById('custom-section-desc').value.trim();
+            if(!title) return;
+
+            const newSec = { id: 'sec-' + Date.now(), title, description, productIds: [] };
+            if(!storeConfig.customSections) storeConfig.customSections = [];
+            storeConfig.customSections.push(newSec);
+
+            document.getElementById('custom-section-title').value = '';
+            document.getElementById('custom-section-desc').value = '';
+            showToast('Custom section created!', 'success');
+            renderCustomAdminSections();
+            renderAllProductSections();
+            saveStorefrontConfigToSupabase();
+        }
+
+        function deleteCustomSection(secId) {
+            if(!confirm('Delete this custom section?')) return;
+            storeConfig.customSections = (storeConfig.customSections || []).filter(s => s.id !== secId);
+            showToast('Custom section removed', 'info');
+            renderCustomAdminSections();
+            renderAllProductSections();
+            saveStorefrontConfigToSupabase();
+        }
+
+        function addProductToCustomSection(secId) {
+            const selectEl = document.getElementById(`add-prod-select-${secId}`);
+            if(!selectEl) return;
+            const prodId = selectEl.value;
+            if(!prodId) return;
+
+            const sec = (storeConfig.customSections || []).find(s => s.id === secId);
+            if(!sec) return;
+            if(!sec.productIds) sec.productIds = [];
+            if(sec.productIds.includes(prodId)) {
+                showToast('Product already in this section', 'error');
+                return;
+            }
+            sec.productIds.push(prodId);
+            showToast('Product added to section!', 'success');
+            renderCustomAdminSections();
+            renderAllProductSections();
+            saveStorefrontConfigToSupabase();
+        }
+
+        function removeProductFromCustomSection(secId, prodId) {
+            const sec = (storeConfig.customSections || []).find(s => s.id === secId);
+            if(!sec || !sec.productIds) return;
+            sec.productIds = sec.productIds.filter(id => id !== prodId);
+            showToast('Product removed from section', 'info');
+            renderCustomAdminSections();
+            renderAllProductSections();
+            saveStorefrontConfigToSupabase();
+        }
+
+        function renderCustomAdminSections() {
+            const list = document.getElementById('custom-sections-admin-list');
+            if(!list) return;
+            const sections = storeConfig.customSections || [];
+            if(sections.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400">No custom sections added yet.</p>`;
+                return;
+            }
+
+            list.innerHTML = sections.map(sec => {
+                const assignedProds = (sec.productIds || []).map(id => productsList.find(p => p.id === id)).filter(Boolean);
+                const unassignedProds = productsList.filter(p => !(sec.productIds || []).includes(p.id));
+                return `
+                    <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                            <span class="font-bold text-slate-900 text-xs">${sec.title}</span>
+                            <button onclick="deleteCustomSection('${sec.id}')" class="text-red-500 hover:underline text-xs">Delete Section</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="add-prod-select-${sec.id}" class="flex-1 p-2 text-xs bg-white border border-slate-200 rounded-lg outline-none">
+                                <option value="">Select product to add...</option>
+                                ${unassignedProds.map(p => `<option value="${p.id}">${p.name} (${formatPrice(p.price)})</option>`).join('')}
+                            </select>
+                            <button onclick="addProductToCustomSection('${sec.id}')" class="px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold">Add</button>
+                        </div>
+                        <div class="text-xs text-slate-600">Assigned: ${assignedProds.map(p => `<span class="inline-block bg-white px-2 py-1 rounded border m-0.5">${p.name} <button onclick="removeProductFromCustomSection('${sec.id}', '${p.id}')" class="text-red-500 font-bold ml-1">×</button></span>`).join('')}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCustomAdminSectionsContent() {
+            const container = document.getElementById('custom-admin-sections-container');
+            if (!container) return;
+            const sections = storeConfig.customSections || [];
+            container.innerHTML = sections.map(sec => {
+                const secProducts = (sec.productIds || []).map(id => productsList.find(p => p.id === id)).filter(Boolean);
+                if(secProducts.length === 0) return '';
+                return `
+                    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 bg-slate-50/70 rounded-3xl my-6 border border-slate-200/60 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <div><h2 class="text-xl sm:text-2xl font-black text-red-600 tracking-tight">${sec.title}</h2>${sec.description ? `<p class="text-xs text-slate-500 mt-0.5">${sec.description}</p>` : ''}</div>
+                        </div>
+                        <div class="flex gap-4 overflow-x-auto no-scrollbar py-2">${secProducts.map(p => renderCardHTML(p)).join('')}</div>
+                    </section>
+                `;
+            }).join('');
+        }
+
+        function addToCart(productId) {
+            const product = productsList.find(p => p.id === productId);
+            if (!product) return;
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) existingItem.quantity += 1;
+            else cart.push({ id: product.id, name: product.name, price: product.price, image: getImagesArray(product.image_url)[0], quantity: 1 });
+            updateCartUI();
+            showToast('Product added to cart!', 'success');
+        }
+
+        function updateCartQuantity(productId, change) {
+            const item = cart.find(i => i.id === productId);
+            if (!item) return;
+            item.quantity += change;
+            if (item.quantity <= 0) cart = cart.filter(i => i.id !== productId);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cart-count-badge').innerText = totalCount;
+            document.getElementById('cart-drawer-count').innerText = totalCount;
+
+            const container = document.getElementById('cart-items-container');
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-16 space-y-3"><i data-lucide="shopping-cart" class="w-6 h-6 mx-auto text-slate-400"></i><p class="text-sm font-semibold text-slate-600">Your cart is empty</p></div>`;
+                document.getElementById('cart-total-price').innerText = formatPrice(0);
+                lucide.createIcons();
+                return;
+            }
+
+            let subtotalUsd = 0;
+            container.innerHTML = cart.map(item => {
+                subtotalUsd += (item.price * item.quantity);
+                return `
+                    <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <img src="${item.image}" class="w-14 h-14 object-contain bg-white rounded-lg p-1 border border-slate-100 shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-xs font-bold text-slate-900 truncate">${item.name}</h4>
+                            <p class="text-xs font-black text-brand-600 mt-0.5">${formatPrice(item.price)}</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <button onclick="updateCartQuantity('${item.id}', -1)" class="w-6 h-6 bg-white border border-slate-200 rounded flex items-center justify-center font-bold">-</button>
+                                <span class="text-xs font-bold">${item.quantity}</span>
+                                <button onclick="updateCartQuantity('${item.id}', 1)" class="w-6 h-6 bg-white border border-slate-200 rounded flex items-center justify-center font-bold">+</button>
+                            </div>
+                        </div>
+                        <button onclick="updateCartQuantity('${item.id}', -${item.quantity})" class="text-slate-400 hover:text-red-500 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('cart-total-price').innerText = formatPrice(subtotalUsd);
+            lucide.createIcons();
+        }
+
+        function checkoutCart() {
+            if (cart.length === 0) { showToast('Your cart is empty', 'error'); return; }
+            showToast('Order placed successfully!', 'success');
+            cart = [];
+            updateCartUI();
+            closeModal('cart-modal');
+        }
+
+        function openProductModal(id) {
+            const product = productsList.find(p => p.id === id);
+            if (!product) return;
+            const imageArray = getImagesArray(product.image_url);
+            document.getElementById('detail-main-image').src = imageArray[0];
+            document.getElementById('detail-category').innerText = `${product.category} > ${product.subcategory || ''}`;
+            document.getElementById('detail-title').innerText = product.name;
+            document.getElementById('detail-price-container').innerHTML = `<span class="text-3xl font-black text-slate-900">${formatPrice(product.price)}</span>`;
+            document.getElementById('detail-description').innerText = product.description || "No description provided.";
+            
+            document.getElementById('detail-buy-btn').onclick = () => { 
+                if(product.buy_url) window.open(product.buy_url, '_blank'); 
+                else showToast('No direct buy link configured', 'error'); 
+            };
+
+            document.getElementById('detail-cart-btn').onclick = () => {
+                addToCart(product.id);
+                closeModal('product-detail-modal');
+            };
+
+            openModal('product-detail-modal');
+        }
+
+        function handleAdminNavClick() { isAdminLoggedIn ? openAdminDashboard() : openModal('admin-auth-modal'); }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('admin-username').value;
+            const pass = document.getElementById('admin-password').value;
+            if (user === 'Exonoz9193@' && pass === 'Mechenz1993@') {
+                isAdminLoggedIn = true;
+                document.getElementById('login-error-msg').classList.add('hidden');
+                closeModal('admin-auth-modal');
+                document.getElementById('nav-admin-btn-text').innerText = 'Admin Dashboard';
+                showToast("Admin Logged In", "success");
+                openAdminDashboard();
+            } else {
+                document.getElementById('login-error-msg').classList.remove('hidden');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            document.getElementById('nav-admin-btn-text').innerText = 'Sign In / Register';
+            closeModal('admin-dashboard-modal');
+            showToast("Logged out", "info");
+        }
+
+        function renderAdminProductTable() {
+            const tbody = document.getElementById('admin-product-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = productsList.map(p => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3"><div class="flex items-center gap-3"><img src="${getImagesArray(p.image_url)[0]}" class="w-8 h-8 rounded object-cover border bg-white p-0.5"><span class="font-bold line-clamp-1">${p.name}</span></div></td>
+                    <td class="p-3 hidden sm:table-cell text-xs">${p.category} > ${p.subcategory}</td>
+                    <td class="p-3 font-bold">${formatPrice(p.price)}</td>
+                    <td class="p-3 text-right">
+                        <button type="button" onclick="editProduct('${p.id}')" class="text-brand-600 hover:underline text-xs mr-2 font-bold">Edit</button>
+                        <button type="button" onclick="deleteProduct('${p.id}')" class="text-red-500 hover:underline text-xs font-bold">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         function openAddProductForm() {
@@ -1257,78 +1484,137 @@
             switchAdminTab('tab-add-product');
         }
 
-        function handleAddCategory() {
-            const input = document.getElementById('new-cat-input');
-            const val = input.value.trim();
-            if (!val) return;
-            if (!categoriesData[val]) {
-                categoriesData[val] = [];
-                input.value = '';
-                renderCategoryNav();
-                showToast(`Category "${val}" created`, "success");
-            }
+        function resetProductForm() {
+            document.getElementById('prod-id').value = '';
+            document.getElementById('prod-title').value = '';
+            document.getElementById('prod-price').value = '';
+            document.getElementById('prod-original-price').value = '';
+            document.getElementById('prod-brand').value = '';
+            document.getElementById('prod-badge').value = '';
+            document.getElementById('prod-image-url').value = '';
+            document.getElementById('prod-buylink').value = '';
+            document.getElementById('prod-description').value = '';
+            document.getElementById('form-heading-title').innerText = "Add New Product";
         }
 
-        function handleAddSubcategory() {
-            const mainCat = document.getElementById('target-main-cat-select').value;
-            const subInput = document.getElementById('new-subcat-input');
-            const val = subInput.value.trim();
-
-            if (mainCat && val) {
-                if (!categoriesData[mainCat].includes(val)) {
-                    categoriesData[mainCat].push(val);
-                    subInput.value = '';
-                    renderCategoryNav();
-                    showToast(`Subcategory "${val}" attached`, "success");
-                }
-            }
+        function editProduct(id) {
+            const prod = productsList.find(p => p.id === id);
+            if (!prod) return;
+            document.getElementById('prod-id').value = prod.id;
+            document.getElementById('prod-title').value = prod.name;
+            document.getElementById('prod-price').value = prod.price;
+            document.getElementById('prod-original-price').value = prod.original_price || '';
+            document.getElementById('prod-brand').value = prod.brand || '';
+            document.getElementById('prod-badge').value = prod.badge || '';
+            document.getElementById('prod-category').value = prod.category;
+            updateSubcategoryDropdown();
+            document.getElementById('prod-subcategory').value = prod.subcategory;
+            document.getElementById('prod-image-url').value = prod.image_url || '';
+            document.getElementById('prod-buylink').value = prod.buy_url || '';
+            document.getElementById('prod-description').value = prod.description || '';
+            document.getElementById('form-heading-title').innerText = "Edit Product";
+            switchAdminTab('tab-add-product');
         }
 
-        function renderCategoryTree() {
-            const tree = document.getElementById('category-tree-display');
-            if (!tree) return;
-            tree.innerHTML = Object.keys(categoriesData).map(cat => `
-                <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
-                    <span class="font-bold text-slate-900">${cat}</span>
-                    <div class="flex flex-wrap gap-1 mt-1">
-                        ${categoriesData[cat].map(s => `
-                            <span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] text-slate-600 font-semibold">${s}</span>
-                        `).join('')}
-                    </div>
+        function renderAdminCategories() {
+            const container = document.getElementById('admin-categories-container');
+            if(!container) return;
+            container.innerHTML = Object.keys(storeConfig.categories).map(cat => `
+                <div class="border border-slate-200 p-3 rounded-lg bg-slate-50 flex flex-col gap-2 category-row">
+                    <input type="text" value="${cat}" class="cat-name-input w-full p-2 text-xs border rounded bg-white font-bold">
+                    <input type="text" value="${storeConfig.categories[cat].join(', ')}" class="cat-subs-input w-full p-2 text-xs border rounded bg-white" placeholder="Subcategories comma separated">
                 </div>
             `).join('');
         }
 
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
+        function addCategoryRow() {
+            storeConfig.categories["New Category"] = ["Sub1"];
+            renderAdminCategories();
         }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
+        function renderAdminBrandCircles() {
+            const container = document.getElementById('admin-brand-circles-container');
+            if(!container) return;
+            container.innerHTML = (storeConfig.brandCircles || []).map(brand => `
+                <div class="border border-slate-200 p-3 rounded-lg bg-slate-50 grid grid-cols-2 gap-2 brand-circle-row">
+                    <input type="text" value="${brand.name}" class="brand-name-input p-2 text-xs border rounded bg-white font-bold" placeholder="Brand Name">
+                    <input type="text" value="${brand.image}" class="brand-img-input p-2 text-xs border rounded bg-white" placeholder="Image URL">
+                </div>
+            `).join('');
         }
 
+        function addBrandCircleRow() {
+            if(!storeConfig.brandCircles) storeConfig.brandCircles = [];
+            storeConfig.brandCircles.push({ id: Date.now(), name: "New Brand", image: "https://placehold.co/100x100", link: "#" });
+            renderAdminBrandCircles();
+        }
+
+        async function handleStorefrontSettingsSave(e) {
+            e.preventDefault();
+            storeConfig.storeName = document.getElementById('setting-store-name').value;
+            storeConfig.logoUrl = document.getElementById('setting-logo-url').value;
+            storeConfig.footerLogoUrl = document.getElementById('setting-footer-logo-url').value;
+            
+            collectTopSlidesFromAdmin();
+            await saveStorefrontConfigToSupabase();
+            applyStorefrontUI();
+            closeModal('admin-dashboard-modal');
+        }
+
+        async function saveStorefrontConfigToSupabase() {
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('store_settings').upsert({ id: 1, config: storeConfig }, { onConflict: 'id' });
+                    showToast("Store settings & logo saved to Supabase!", "success");
+                } catch(err) {
+                    showToast("Error saving storefront settings", "error");
+                }
+            }
+        }
+
+        function openAdminDashboard() { 
+            document.getElementById('setting-store-name').value = storeConfig.storeName;
+            document.getElementById('setting-logo-url').value = storeConfig.logoUrl || '';
+            document.getElementById('setting-footer-logo-url').value = storeConfig.footerLogoUrl || '';
+            updateLogoPreviews();
+            renderAdminCategories();
+            renderAdminBrandCircles();
+            renderAdminTopSlides();
+            renderCustomAdminSections();
+            openModal('admin-dashboard-modal'); 
+        }
+
+        function openCartModal() { openModal('cart-modal'); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('border-brand-600', 'text-brand-600');
+                btn.classList.add('border-transparent', 'text-slate-500');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-btn-' + tabId.replace('tab-', ''));
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-500');
+                activeBtn.classList.add('border-brand-600', 'text-brand-600');
+            }
+        }
+
+        function handleSearchInput(val) { searchQuery = val.trim(); renderAllProductSections(); }
+        function clearSearch() { document.getElementById('main-search-input').value = ''; searchQuery = ''; renderAllProductSections(); }
+        function selectCategory(cat, sub = null) { activeCategory = cat; activeSubcategory = sub; renderCategoryNav(); renderRecommendedSubcats(); renderAllProductSections(); }
+        function resetFilters() { activeCategory = 'All'; activeSubcategory = null; clearSearch(); renderCategoryNav(); renderRecommendedSubcats(); renderAllProductSections(); }
+        
         function showToast(msg, type = "info") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            
-            const bgClass = type === 'success' ? 'bg-slate-900 text-emerald-400 border-emerald-500/30' :
-                           type === 'error' ? 'bg-slate-900 text-rose-400 border-rose-500/30' :
-                           'bg-slate-900 text-brand-300 border-brand-500/30';
-
-            toast.className = `p-3 rounded-xl border ${bgClass} text-xs font-bold shadow-2xl flex items-center gap-2 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.className = `p-3 rounded-lg text-white ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800'} text-xs font-bold shadow-xl flex items-center gap-2`;
             toast.innerHTML = `<i data-lucide="info" class="w-4 h-4 shrink-0"></i><span>${msg}</span>`;
-
             container.appendChild(toast);
             lucide.createIcons();
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => toast.remove(), 3000);
         }
 
         window.addEventListener('DOMContentLoaded', initApp);
