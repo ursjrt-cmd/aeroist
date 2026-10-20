@@ -226,13 +226,14 @@
     <!-- TOP SLIDESHOW CARDS CONTAINER -->
     <section class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3" aria-label="Featured store categories">
         <div class="relative">
-            <button type="button" aria-label="Previous featured cards" title="Previous cards" onclick="scrollContainer('top-cards-slideshow', -1)" class="top-carousel-arrow absolute left-1 sm:left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full shadow-md flex items-center justify-center text-slate-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition-all">
+            <!-- Left Arrow: Hidden on mobile view, visible on sm and up -->
+            <button type="button" aria-label="Previous featured cards" title="Previous cards" onclick="scrollContainer('top-cards-slideshow', -1)" class="top-carousel-arrow absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full shadow-md hidden sm:flex items-center justify-center text-slate-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition-all">
                 <i data-lucide="chevron-left" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-600"></i>
             </button>
 
-            <div id="top-cards-slideshow" tabindex="0" aria-label="Featured categories carousel. Swipe or use the arrows to view all cards." class="mx-6 sm:mx-10 flex gap-2.5 sm:gap-4 overflow-x-auto scroll-smooth-container no-scrollbar py-2 px-1 max-w-full"></div>
+            <div id="top-cards-slideshow" tabindex="0" aria-label="Featured categories carousel. Swipe or use the arrows to view all cards." class="mx-0 sm:mx-10 flex gap-2.5 sm:gap-4 overflow-x-auto scroll-smooth-container no-scrollbar py-2 px-1 max-w-full"></div>
 
-            <button type="button" aria-label="Next featured cards" title="Next cards" onclick="scrollContainer('top-cards-slideshow', 1)" class="top-carousel-arrow absolute right-1 sm:right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full shadow-md flex items-center justify-center text-slate-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition-all">
+            <button type="button" aria-label="Next featured cards" title="Next cards" onclick="scrollContainer('top-cards-slideshow', 1)" class="top-carousel-arrow absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full shadow-md flex items-center justify-center text-slate-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition-all">
                 <i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-600"></i>
             </button>
         </div>
