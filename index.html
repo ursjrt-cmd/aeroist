@@ -249,15 +249,10 @@
                 gap: 0.75rem;
             }
 
-            #top-cards-prev-btn {
-                display: none !important;
-            }
-
+            /* Hide both left and right arrows on mobile */
+            #top-cards-prev-btn,
             #top-cards-next-btn {
-                display: flex !important;
-                width: 34px;
-                height: 34px;
-                right: 0;
+                display: none !important;
             }
 
             #top-cards-slideshow {
@@ -501,7 +496,7 @@
 
             <div id="top-cards-slideshow" tabindex="0" aria-label="Featured categories carousel. Swipe or use the arrows to view all cards." class="mx-0 sm:mx-10 flex gap-2.5 sm:gap-4 overflow-x-auto scroll-smooth-container no-scrollbar py-2 px-1 max-w-full"></div>
 
-            <button id="top-cards-next-btn" type="button" aria-label="Next featured cards" title="Next cards" onclick="scrollContainer('top-cards-slideshow', 1)" class="top-carousel-arrow absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full shadow-md flex items-center justify-center text-slate-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition-all">
+            <button id="top-cards-next-btn" type="button" aria-label="Next featured cards" title="Next cards" onclick="scrollContainer('top-cards-slideshow', 1)" class="top-carousel-arrow absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full shadow-md hidden sm:flex items-center justify-center text-slate-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 transition-all">
                 <i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-600"></i>
             </button>
         </div>
@@ -1178,8 +1173,11 @@
                 const styles = window.getComputedStyle(container);
                 const gap = parseFloat(styles.columnGap || styles.gap || '0') || 10;
                 const step = firstCard ? firstCard.getBoundingClientRect().width + gap : 185;
-                const reachedEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 4;
-                const nextLeft = reachedEnd ? 0 : Math.min(maxScrollLeft, container.scrollLeft + step);
+                
+                // Endless repeating continuous slide loop
+                const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 10;
+                const nextLeft = isAtEnd ? 0 : container.scrollLeft + step;
+
                 container.scrollTo({ left: nextLeft, behavior: 'smooth' });
             }, 3200);
         }
