@@ -877,10 +877,11 @@
 
                         <div class="bg-white p-6 border border-slate-200 rounded-xl space-y-5 shadow-sm">
                             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <h4 class="font-bold text-slate-900 text-base flex items-center gap-2"><i data-lucide="tags" class="w-4 h-4 text-brand-600"></i> Manage Categories</h4>
+                                <h4 class="font-bold text-slate-900 text-base flex items-center gap-2"><i data-lucide="tags" class="w-4 h-4 text-brand-600"></i> Manage Categories & Subcategories</h4>
                                 <button type="button" onclick="addCategoryRow()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-all"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Category</button>
                             </div>
-                            <div id="admin-categories-container" class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2"></div>
+                            <p class="text-xs text-slate-500">Category and subcategory changes are saved to Supabase immediately. Categories containing products, and subcategories assigned to products, cannot be deleted until those products are reassigned.</p>
+                            <div id="admin-categories-container" class="space-y-4 max-h-[520px] overflow-y-auto custom-scrollbar pr-2"></div>
                         </div>
 
                         <div class="col-span-1 lg:col-span-2 flex justify-end gap-4 border-t border-slate-200 pt-6">
@@ -1036,6 +1037,7 @@
             }
             startTopCardsAutoScroll();
             lucide.createIcons();
+            storeConfig.categories = normalizeCategories(storeConfig.categories);
             renderAdminCategories();
             renderAdminTopCircles();
             renderAdminTopSlides();
@@ -1076,9 +1078,13 @@
                 const { data } = await supabaseClient.from('store_settings').select('config').eq('id', 1).single();
                 if (data && data.config) {
                     storeConfig = { ...storeConfig, ...data.config };
+                    storeConfig.categories = normalizeCategories(storeConfig.categories);
                     normalizeTopSlideshowCards();
                 }
-            } catch (err) {}
+            } catch (err) {
+                console.error("Error fetching store settings:", err);
+            }
+            storeConfig.categories = normalizeCategories(storeConfig.categories);
             applyStorefrontUI(); 
             renderAdminCategories();
             renderAdminTopCircles();
@@ -1310,6 +1316,42 @@
             return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
             })[character]);
+        }
+
+        // Categories are stored in store_settings.config.categories as:
+        // { "Category name": ["Subcategory one", "Subcategory two"] }
+        // This keeps existing storefront data compatible; no extra table is required.
+        function normalizeCategories(input) {
+            const normalized = {};
+            if (!input || typeof input !== 'object' || Array.isArray(input)) return normalized;
+            Object.entries(input).forEach(([rawName, rawSubs]) => {
+                const name = String(rawName || '').trim();
+                if (!name) return;
+                let subs = Array.isArray(rawSubs) ? rawSubs : (typeof rawSubs === 'string' ? rawSubs.split(',') : []);
+                const uniqueSubs = [];
+                subs.forEach(value => {
+                    const sub = String(value == null ? '' : value).trim();
+                    if (sub && !uniqueSubs.some(existing => existing.toLowerCase() === sub.toLowerCase())) uniqueSubs.push(sub);
+                });
+                normalized[name] = uniqueSubs;
+            });
+            return normalized;
+        }
+
+        function requireAdminForCategoryChange() {
+            if (isAdminLoggedIn && supabaseClient) return true;
+            showToast('Please sign in to the admin account before managing categories.', 'error');
+            return false;
+        }
+
+        function refreshCategoryUI() {
+            storeConfig.categories = normalizeCategories(storeConfig.categories);
+            renderCategoryNav();
+            renderRecommendedSubcats();
+            populateCategorySelects();
+            renderAdminCategories();
+            renderAllProductSections();
+            if (window.lucide) lucide.createIcons();
         }
 
         function renderTopCirclesMenu() {
@@ -1569,26 +1611,29 @@
 
         function renderCategoryNav() {
             const container = document.getElementById('category-nav-container');
-            if(!container) return;
-            let html = `
-                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer group ${activeCategory === 'All' ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}" onclick="selectCategory('All')">
-                    <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
-                    <span class="text-xs font-bold">All Categories</span>
-                </div>
-            `;
-            const iconMap = { 'Everyday\'s Sale': 'badge-percent', 'Fresh Produce': 'carrot', 'Seafood Market': 'fish', 'Meat Specials': 'drumstick', 'Korea Direct': 'globe', 'New': 'sparkles' };
-            Object.keys(storeConfig.categories).forEach(cat => {
-                const isActive = activeCategory === cat;
-                const iconName = iconMap[cat] || 'tag';
-                html += `
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer group ${isActive ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}" onclick="selectCategory('${escapeHTML(cat)}')">
-                        <i data-lucide="${iconName}" class="w-3.5 h-3.5"></i>
-                        <span class="text-xs font-bold whitespace-nowrap">${escapeHTML(cat)}</span>
+            // Some storefront layouts do not include a separate category-nav-container.
+            // Always populate the product form category dropdown even when that optional nav is absent.
+            if (container) {
+                let html = `
+                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer group ${activeCategory === 'All' ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}" onclick="selectCategory('All')">
+                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                        <span class="text-xs font-bold">All Categories</span>
                     </div>
                 `;
-            });
-            container.innerHTML = html;
-            lucide.createIcons();
+                const iconMap = { 'Everyday\'s Sale': 'badge-percent', 'Fresh Produce': 'carrot', 'Seafood Market': 'fish', 'Meat Specials': 'drumstick', 'Korea Direct': 'globe', 'New': 'sparkles' };
+                Object.keys(storeConfig.categories || {}).forEach(cat => {
+                    const isActive = activeCategory === cat;
+                    const iconName = iconMap[cat] || 'tag';
+                    html += `
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer group ${isActive ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}" onclick="selectCategory(${escapeHTML(JSON.stringify(cat))})">
+                            <i data-lucide="${iconName}" class="w-3.5 h-3.5"></i>
+                            <span class="text-xs font-bold whitespace-nowrap">${escapeHTML(cat)}</span>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                if (window.lucide) lucide.createIcons();
+            }
             populateCategorySelects();
         }
 
@@ -1599,7 +1644,7 @@
             let html = `<button onclick="selectCategory('All')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${activeCategory === 'All' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">All</button>`;
             cats.forEach(cat => {
                 const isActive = activeCategory === cat;
-                html += `<button onclick="selectCategory('${escapeHTML(cat)}')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${isActive ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${escapeHTML(cat)}</button>`;
+                html += `<button onclick="selectCategory(${escapeHTML(JSON.stringify(cat))})" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${isActive ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${escapeHTML(cat)}</button>`;
             });
             bar.innerHTML = html;
         }
@@ -2080,43 +2125,271 @@
 
         function renderAdminCategories() {
             const container = document.getElementById('admin-categories-container');
-            if(!container) return;
-            container.innerHTML = Object.keys(storeConfig.categories).map(cat => `
-                <div class="border border-slate-200 p-3 rounded-lg bg-slate-50 flex flex-col gap-2 category-row">
-                    <input type="text" value="${escapeHTML(cat)}" class="cat-name-input w-full p-2 text-xs border rounded bg-white font-bold">
-                    <input type="text" value="${escapeHTML(storeConfig.categories[cat].join(', '))}" class="cat-subs-input w-full p-2 text-xs border rounded bg-white" placeholder="Subcategories comma separated">
+            if (!container) return;
+
+            storeConfig.categories = normalizeCategories(storeConfig.categories);
+            const categoryEntries = Object.entries(storeConfig.categories);
+            if (!categoryEntries.length) {
+                container.innerHTML = '<div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-xs text-slate-500">No categories yet. Select “Add Category” to create your first category.</div>';
+                return;
+            }
+
+            container.innerHTML = categoryEntries.map(([category, subcategories], categoryIndex) => `
+                <div class="category-admin-card rounded-xl border border-slate-200 bg-white p-3 sm:p-4 space-y-3" data-category-index="${categoryIndex}">
+                    <div class="flex flex-col sm:flex-row sm:items-end gap-2">
+                        <div class="flex-1 min-w-0">
+                            <label for="cat-name-${categoryIndex}" class="block text-[11px] font-bold text-slate-600 mb-1">Category name</label>
+                            <input id="cat-name-${categoryIndex}" type="text" maxlength="80" value="${escapeHTML(category)}" class="cat-name-input w-full p-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:border-brand-500 outline-none font-semibold" autocomplete="off">
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="saveCategoryName(${categoryIndex})" class="flex-1 sm:flex-none px-3 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold">Save Name</button>
+                            <button type="button" onclick="deleteCategory(${categoryIndex})" class="px-3 py-2.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold">Delete</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-[11px] font-bold text-slate-600">Subcategories (${subcategories.length})</label>
+                            <span class="text-[10px] text-slate-400">Manage individually</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${subcategories.length ? subcategories.map((subcategory, subIndex) => `
+                                <span class="inline-flex items-center gap-2 max-w-full rounded-full border border-slate-200 bg-slate-50 pl-3 pr-1.5 py-1.5 text-xs text-slate-700">
+                                    <span class="break-all">${escapeHTML(subcategory)}</span>
+                                    <button type="button" onclick="deleteSubcategory(${categoryIndex}, ${subIndex})" aria-label="Delete ${escapeHTML(subcategory)}" title="Delete subcategory" class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 font-bold">×</button>
+                                </span>
+                            `).join('') : '<span class="text-xs text-slate-400">No subcategories yet.</span>'}
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-slate-100">
+                        <input id="new-subcategory-${categoryIndex}" type="text" maxlength="80" placeholder="Enter a new subcategory" class="flex-1 min-w-0 p-2.5 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:border-brand-500 outline-none" onkeydown="if(event.key==='Enter'){event.preventDefault(); addSubcategory(${categoryIndex});}">
+                        <button type="button" onclick="addSubcategory(${categoryIndex})" class="px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Subcategory</button>
+                    </div>
                 </div>
             `).join('');
+            if (window.lucide) lucide.createIcons();
         }
 
-        function addCategoryRow() {
-            storeConfig.categories["New Category"] = ["Sub1"];
-            renderAdminCategories();
+        async function addCategoryRow() {
+            if (!requireAdminForCategoryChange()) return;
+            const rawName = window.prompt('Enter the new category name:');
+            if (rawName === null) return;
+            const name = rawName.trim();
+            if (!name) {
+                showToast('Category name cannot be empty.', 'error');
+                return;
+            }
+            const current = normalizeCategories(storeConfig.categories);
+            if (Object.keys(current).some(existing => existing.toLowerCase() === name.toLowerCase())) {
+                showToast('A category with this name already exists.', 'error');
+                return;
+            }
+
+            const previous = storeConfig.categories;
+            storeConfig.categories = { ...current, [name]: [] };
+            const saved = await saveStorefrontConfigToSupabase({ showSuccess: false });
+            if (!saved) {
+                storeConfig.categories = previous;
+                renderAdminCategories();
+                return;
+            }
+            refreshCategoryUI();
+            showToast(`Category “${name}” created and saved to Supabase.`, 'success');
+        }
+
+        async function saveCategoryName(categoryIndex) {
+            if (!requireAdminForCategoryChange()) return;
+            const entries = Object.entries(normalizeCategories(storeConfig.categories));
+            if (!entries[categoryIndex]) return;
+            const [oldName, subcategories] = entries[categoryIndex];
+            const input = document.getElementById(`cat-name-${categoryIndex}`);
+            const newName = input ? input.value.trim() : oldName;
+
+            if (!newName) {
+                showToast('Category name cannot be empty.', 'error');
+                if (input) input.value = oldName;
+                return;
+            }
+            if (newName !== oldName && entries.some(([name]) => name.toLowerCase() === newName.toLowerCase())) {
+                showToast('A category with this name already exists.', 'error');
+                if (input) input.value = oldName;
+                return;
+            }
+            if (newName === oldName) {
+                showToast('Category name is unchanged.', 'info');
+                return;
+            }
+
+            // Keep product records consistent when a category is renamed.
+            const affectedProductIds = productsList
+                .filter(product => String(product.category) === oldName)
+                .map(product => product.id);
+            try {
+                if (affectedProductIds.length) {
+                    const { error: productUpdateError } = await supabaseClient.from('products').update({ category: newName }).in('id', affectedProductIds);
+                    if (productUpdateError) throw productUpdateError;
+                }
+
+                const updated = {};
+                entries.forEach(([name, subs], index) => { updated[index === categoryIndex ? newName : name] = subs; });
+                const previousCategories = storeConfig.categories;
+                storeConfig.categories = updated;
+                const saved = await saveStorefrontConfigToSupabase({ showSuccess: false });
+                if (!saved) {
+                    storeConfig.categories = previousCategories;
+                    if (affectedProductIds.length) {
+                        const { error: rollbackError } = await supabaseClient.from('products').update({ category: oldName }).in('id', affectedProductIds);
+                        if (rollbackError) console.error('Product category rollback failed:', rollbackError);
+                    }
+                    renderAdminCategories();
+                    return;
+                }
+                if (activeCategory === oldName) activeCategory = newName;
+                await fetchProductsFromSupabase();
+                refreshCategoryUI();
+                showToast(`Category renamed to “${newName}” and saved.`, 'success');
+            } catch (error) {
+                console.error('Category rename failed:', error);
+                showToast(`Could not rename category: ${error.message || 'Database error'}`, 'error');
+                renderAdminCategories();
+            }
+        }
+
+        async function addSubcategory(categoryIndex) {
+            if (!requireAdminForCategoryChange()) return;
+            const entries = Object.entries(normalizeCategories(storeConfig.categories));
+            if (!entries[categoryIndex]) return;
+            const [category, existingSubs] = entries[categoryIndex];
+            const input = document.getElementById(`new-subcategory-${categoryIndex}`);
+            const newSubcategory = input ? input.value.trim() : '';
+            if (!newSubcategory) {
+                showToast('Enter a subcategory name first.', 'error');
+                return;
+            }
+            if (existingSubs.some(sub => sub.toLowerCase() === newSubcategory.toLowerCase())) {
+                showToast('This subcategory already exists in the selected category.', 'error');
+                return;
+            }
+
+            const previous = storeConfig.categories;
+            storeConfig.categories = normalizeCategories(previous);
+            storeConfig.categories[category] = [...existingSubs, newSubcategory];
+            const saved = await saveStorefrontConfigToSupabase({ showSuccess: false });
+            if (!saved) {
+                storeConfig.categories = previous;
+                renderAdminCategories();
+                return;
+            }
+            refreshCategoryUI();
+            showToast(`Subcategory “${newSubcategory}” added to “${category}”.`, 'success');
+        }
+
+        async function deleteSubcategory(categoryIndex, subcategoryIndex) {
+            if (!requireAdminForCategoryChange()) return;
+            const entries = Object.entries(normalizeCategories(storeConfig.categories));
+            if (!entries[categoryIndex]) return;
+            const [category, subcategories] = entries[categoryIndex];
+            const subcategory = subcategories[subcategoryIndex];
+            if (subcategory === undefined) return;
+
+            const assignedCount = productsList.filter(product => String(product.category) === category && String(product.subcategory) === subcategory).length;
+            if (assignedCount > 0) {
+                showToast(`Cannot delete: ${assignedCount} product(s) still use this subcategory. Reassign them first.`, 'error');
+                return;
+            }
+            if (!window.confirm(`Delete subcategory “${subcategory}” from “${category}”?`)) return;
+
+            const previous = storeConfig.categories;
+            storeConfig.categories = normalizeCategories(previous);
+            storeConfig.categories[category] = subcategories.filter((_, index) => index !== subcategoryIndex);
+            if (activeCategory === category && activeSubcategory === subcategory) activeSubcategory = null;
+            const saved = await saveStorefrontConfigToSupabase({ showSuccess: false });
+            if (!saved) {
+                storeConfig.categories = previous;
+                renderAdminCategories();
+                return;
+            }
+            refreshCategoryUI();
+            showToast(`Subcategory “${subcategory}” deleted.`, 'success');
+        }
+
+        async function deleteCategory(categoryIndex) {
+            if (!requireAdminForCategoryChange()) return;
+            const entries = Object.entries(normalizeCategories(storeConfig.categories));
+            if (!entries[categoryIndex]) return;
+            const [category] = entries[categoryIndex];
+            const assignedCount = productsList.filter(product => String(product.category) === category).length;
+            if (assignedCount > 0) {
+                showToast(`Cannot delete: ${assignedCount} product(s) still use “${category}”. Reassign them first.`, 'error');
+                return;
+            }
+            if (!window.confirm(`Delete category “${category}” and all of its subcategories?`)) return;
+
+            const previous = storeConfig.categories;
+            const updated = { ...normalizeCategories(previous) };
+            delete updated[category];
+            storeConfig.categories = updated;
+            if (activeCategory === category) {
+                activeCategory = 'All';
+                activeSubcategory = null;
+            }
+            const saved = await saveStorefrontConfigToSupabase({ showSuccess: false });
+            if (!saved) {
+                storeConfig.categories = previous;
+                renderAdminCategories();
+                return;
+            }
+            refreshCategoryUI();
+            showToast(`Category “${category}” deleted.`, 'success');
         }
 
         async function handleStorefrontSettingsSave(e) {
             e.preventDefault();
-            storeConfig.storeName = document.getElementById('setting-store-name').value;
-            storeConfig.logoUrl = document.getElementById('setting-logo-url').value;
-            storeConfig.footerLogoUrl = document.getElementById('setting-footer-logo-url').value;
-            
+            if (!isAdminLoggedIn) {
+                showToast('Please sign in as admin before saving settings.', 'error');
+                return;
+            }
+            storeConfig.storeName = document.getElementById('setting-store-name').value.trim() || 'JRT Mart';
+            storeConfig.logoUrl = document.getElementById('setting-logo-url').value.trim();
+            storeConfig.footerLogoUrl = document.getElementById('setting-footer-logo-url').value.trim();
+
             collectTopCirclesFromAdmin();
             collectTopSlidesFromAdmin();
-            await saveStorefrontConfigToSupabase();
+            const saved = await saveStorefrontConfigToSupabase();
+            if (!saved) return;
             applyStorefrontUI();
-            closeModal('admin-dashboard-modal');
+            showToast('Storefront settings saved.', 'success');
         }
 
-        async function saveStorefrontConfigToSupabase() {
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('store_settings').upsert({ id: 1, config: storeConfig }, { onConflict: 'id' });
-                    showToast("Store settings saved to Supabase!", "success");
-                } catch(err) {}
+        async function saveStorefrontConfigToSupabase(options = {}) {
+            const showSuccess = options.showSuccess !== false;
+            if (!supabaseClient) {
+                showToast('Database client is not initialized.', 'error');
+                return false;
+            }
+            if (!isAdminLoggedIn) {
+                showToast('Admin sign-in is required to save store settings.', 'error');
+                return false;
+            }
+
+            try {
+                const safeConfig = { ...storeConfig, categories: normalizeCategories(storeConfig.categories) };
+                const { error } = await supabaseClient
+                    .from('store_settings')
+                    .upsert({ id: 1, config: safeConfig }, { onConflict: 'id' });
+                if (error) throw error;
+                storeConfig.categories = safeConfig.categories;
+                if (showSuccess) showToast('Store settings saved to Supabase!', 'success');
+                return true;
+            } catch (err) {
+                console.error('Could not save store settings:', err);
+                showToast(`Could not save to Supabase: ${err.message || 'Check table permissions and RLS policies.'}`, 'error');
+                return false;
             }
         }
 
         function openAdminDashboard() { 
+            if (!isAdminLoggedIn) { openModal('admin-auth-modal'); return; }
+            storeConfig.categories = normalizeCategories(storeConfig.categories);
             document.getElementById('setting-store-name').value = storeConfig.storeName;
             document.getElementById('setting-logo-url').value = storeConfig.logoUrl || '';
             document.getElementById('setting-footer-logo-url').value = storeConfig.footerLogoUrl || '';
