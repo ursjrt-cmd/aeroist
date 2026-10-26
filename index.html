@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>JRT Mart | E-Commerce</title>
+    <meta name="description" content="Shop products with a responsive product gallery, image and video previews, product descriptions, and cart controls.">
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -138,6 +139,20 @@
         .product-card {
             overflow-wrap: anywhere;
         }
+
+        .product-stock-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            max-width: 100%;
+            border-radius: 9999px;
+            padding: .25rem .45rem;
+            font-size: 9px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        .product-stock-pill.in-stock { color: #166534; background: #dcfce7; }
+        .product-stock-pill.out-of-stock { color: #991b1b; background: #fee2e2; }
 
         .top-carousel-arrow {
             touch-action: manipulation;
@@ -288,7 +303,7 @@
                 border-radius: 0.9rem;
             }
 
-            .product-card > div[onclick*="openProductModal"] {
+            .product-card > div.pointer-events-none {
                 height: clamp(98px, 30vw, 126px) !important;
             }
 
@@ -371,6 +386,177 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+
+        /* Product detail dialog: fixed available height, independently scrollable details,
+           and an action footer that never covers the description. */
+        body.product-detail-open { overflow: hidden; }
+        #product-detail-modal { overscroll-behavior: contain; }
+        #product-detail-modal > div {
+            width: min(100%, 70rem);
+            height: min(92dvh, 56rem);
+            max-height: calc(100dvh - 1rem);
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+        }
+        #detail-media-panel {
+            flex: 0 0 48%;
+            width: 48%;
+            min-height: 0;
+            overflow: hidden;
+        }
+        #detail-media-stage {
+            flex: 1 1 auto;
+            min-height: 180px;
+            max-height: none;
+            aspect-ratio: auto;
+        }
+        #detail-media-stage img,
+        #detail-media-stage video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        #detail-media-thumbnails { min-width: 0; }
+        #detail-media-thumbnails button {
+            flex: 0 0 64px;
+            height: 64px;
+        }
+        #detail-media-thumbnails button[aria-current="true"] {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 1px #dc2626;
+        }
+        #detail-info-panel {
+            flex: 1 1 52%;
+            width: 52%;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+            padding-bottom: 0;
+        }
+        #detail-title { overflow-wrap: anywhere; padding-right: 2rem; }
+        #detail-description {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: normal;
+            line-height: 1.75;
+            max-width: 100%;
+        }
+        #detail-stock-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            width: fit-content;
+            max-width: 100%;
+            border-radius: 9999px;
+            padding: .4rem .75rem;
+            font-size: .75rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        #detail-stock-status.in-stock { color: #166534; background: #dcfce7; }
+        #detail-stock-status.out-of-stock { color: #991b1b; background: #fee2e2; }
+        #detail-action-row {
+            position: sticky;
+            bottom: 0;
+            z-index: 5;
+            flex: 0 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .65rem;
+            margin-top: auto;
+            padding: 1rem 0 max(.6rem, env(safe-area-inset-bottom, 0px));
+            background: linear-gradient(to bottom, rgba(255,255,255,.94), #fff 18%);
+            box-shadow: 0 -10px 18px -18px rgba(15,23,42,.45);
+        }
+        #detail-action-row button {
+            min-width: 0;
+            min-height: 48px;
+            padding: .75rem .6rem;
+            line-height: 1.2;
+            white-space: normal;
+        }
+        #detail-action-row button:disabled {
+            cursor: not-allowed;
+            opacity: .48;
+            box-shadow: none;
+        }
+        .admin-media-preview-card { width: 100px; min-width: 100px; }
+        .admin-media-preview-card img,
+        .admin-media-preview-card video {
+            width: 100%;
+            height: 76px;
+            object-fit: contain;
+            background: #f8fafc;
+        }
+        @media (max-width: 767px) {
+            #product-detail-modal {
+                align-items: center;
+                padding: max(.35rem, env(safe-area-inset-top, 0px)) .35rem max(.35rem, env(safe-area-inset-bottom, 0px));
+            }
+            #product-detail-modal > div {
+                width: 100%;
+                height: calc(100dvh - .7rem);
+                max-height: 96dvh;
+                border-radius: 1rem;
+                flex-direction: column;
+            }
+            #detail-media-panel {
+                flex: 0 0 36%;
+                width: 100%;
+                max-height: 36%;
+                padding: .65rem;
+                border-right: 0;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            #detail-media-stage {
+                min-height: 0;
+                height: auto;
+                max-height: none;
+                margin-bottom: .4rem;
+            }
+            #detail-media-thumbnails button {
+                flex-basis: 48px;
+                height: 48px;
+                width: 48px;
+                padding: .2rem;
+            }
+            #detail-media-count { margin-top: .15rem; font-size: 10px; }
+            #detail-info-panel {
+                flex: 1 1 auto;
+                width: 100%;
+                padding: .9rem 1rem 0;
+                scrollbar-gutter: auto;
+            }
+            #detail-title {
+                font-size: clamp(1.15rem, 5vw, 1.55rem);
+                line-height: 1.25;
+                margin-bottom: .65rem;
+                padding-right: 1.65rem;
+            }
+            #detail-price-container .detail-current-price { font-size: 1.65rem; }
+            #detail-description { font-size: .875rem; line-height: 1.7; }
+            #detail-action-row {
+                gap: .5rem;
+                padding-top: .75rem;
+                padding-bottom: max(.65rem, env(safe-area-inset-bottom, 0px));
+            }
+            #detail-action-row button { min-height: 46px; font-size: .78rem; }
+        }
+        @media (max-width: 360px) {
+            #detail-action-row { gap: .35rem; }
+            #detail-action-row button { font-size: .7rem; padding-inline: .35rem; }
+        }
+        @media (min-width: 768px) {
+            #detail-media-panel { border-right: 1px solid #f1f5f9; }
+            #detail-media-stage { min-height: 0; }
+        }
+
     </style>
 </head>
 <body class="h-full flex flex-col text-slate-800 antialiased selection:bg-brand-500 selection:text-white overflow-x-hidden">
@@ -589,33 +775,42 @@
         </div>
     </div>
 
-    <!-- PRODUCT DETAIL MODAL -->
+    <!-- PRODUCT DETAIL MODAL: responsive image/video gallery + product details -->
     <div id="product-detail-modal" class="fixed inset-0 z-[60] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl relative flex flex-col md:flex-row overflow-hidden max-h-[95vh] md:max-h-[85vh]">
-            <button onclick="closeModal('product-detail-modal')" class="absolute top-4 right-4 z-20 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 shadow-sm transition-all">
+        <div class="bg-white rounded-2xl max-w-6xl w-full shadow-2xl relative flex flex-col md:flex-row overflow-hidden min-h-0">
+            <button onclick="closeModal('product-detail-modal')" aria-label="Close product details" class="absolute top-3 right-3 z-30 w-9 h-9 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-sm">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
-            <div class="w-full md:w-1/2 bg-slate-50 p-4 sm:p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-100 relative">
-                <div class="w-full aspect-square relative flex items-center justify-center mb-4 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                    <img id="detail-main-image" src="" class="max-h-full max-w-full object-contain p-4 transition-opacity duration-300">
+            <div id="detail-media-panel" class="w-full md:w-1/2 bg-slate-50 p-3 sm:p-6 flex flex-col border-b md:border-b-0 md:border-r border-slate-100 min-w-0">
+                <div id="detail-media-stage" class="w-full relative flex items-center justify-center mb-3 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div class="text-sm text-slate-400">Product media</div>
                 </div>
+                <div class="flex items-center gap-2 min-w-0">
+                    <button type="button" onclick="changeDetailMedia(-1)" aria-label="Previous product media" class="w-9 h-9 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-600"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <div id="detail-media-thumbnails" class="flex flex-1 gap-2 overflow-x-auto no-scrollbar py-1 min-w-0" aria-label="Product media thumbnails"></div>
+                    <button type="button" onclick="changeDetailMedia(1)" aria-label="Next product media" class="w-9 h-9 shrink-0 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-brand-600"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                </div>
+                <p id="detail-media-count" class="text-[11px] text-slate-400 text-center mt-2"></p>
             </div>
-            <div class="w-full md:w-1/2 p-5 sm:p-8 flex flex-col overflow-y-auto custom-scrollbar">
+            <div id="detail-info-panel" class="w-full md:w-1/2 p-4 sm:p-8 flex flex-col overflow-y-auto custom-scrollbar min-w-0">
                 <span id="detail-category" class="text-xs font-bold text-brand-600 uppercase tracking-wide mb-2">Category</span>
                 <h2 id="detail-title" class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight mb-4">Product Title</h2>
-                <div class="flex flex-col gap-2 mb-6 pb-6 border-b border-slate-100">
+                <div class="flex flex-col gap-2 mb-5 pb-5 border-b border-slate-100">
                     <div id="detail-price-container" class="flex items-end gap-3 flex-wrap"></div>
-                    <div><span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded mt-1 inline-block uppercase">In Stock</span></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="detail-stock-status" class="detail-stock-status in-stock" role="status"><span aria-hidden="true">●</span>In stock</span>
+                        <span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded inline-block uppercase">Product details</span>
+                    </div>
                 </div>
-                <div class="mb-6 flex-1">
-                    <h4 class="text-sm font-bold text-slate-900 mb-2">Description & Specifications</h4>
-                    <p id="detail-description" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"></p>
+                <div class="mb-4 flex-none min-h-0 pb-3">
+                    <h4 class="text-sm font-bold text-slate-900 mb-2">Description &amp; Specifications</h4>
+                    <p id="detail-description" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words">No description provided.</p>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100 mt-auto">
-                    <button id="detail-cart-btn" class="flex-1 py-3.5 bg-white border-2 border-brand-600 text-brand-600 hover:bg-brand-50 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
+                <div id="detail-action-row" class="pt-4 border-t border-slate-100">
+                    <button id="detail-cart-btn" type="button" class="flex-1 py-3.5 bg-white border-2 border-brand-600 text-brand-600 hover:bg-brand-50 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
                         <i data-lucide="shopping-cart" class="w-5 h-5"></i> Add to Cart
                     </button>
-                    <button id="detail-buy-btn" class="flex-1 py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md">
+                    <button id="detail-buy-btn" type="button" class="flex-1 py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md">
                         <i data-lucide="zap" class="w-5 h-5"></i> Buy Now
                     </button>
                 </div>
@@ -742,6 +937,11 @@
                                     <input type="number" id="prod-original-price" step="0.01" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500" placeholder="Optional">
                                 </div>
                                 <div class="sm:col-span-1">
+                                    <label for="prod-stock-quantity" class="block text-xs font-bold text-slate-700 mb-1">Stock quantity *</label>
+                                    <input type="number" id="prod-stock-quantity" min="0" step="1" value="100" required class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500" placeholder="0 = out of stock">
+                                    <p class="text-[10px] text-slate-500 mt-1">Set 0 to mark sold out.</p>
+                                </div>
+                                <div class="sm:col-span-1">
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Category *</label>
                                     <select id="prod-category" onchange="updateSubcategoryDropdown()" required class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></select>
                                 </div>
@@ -765,9 +965,17 @@
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Description & Specs</label>
                                     <textarea id="prod-description" rows="3" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></textarea>
                                 </div>
-                                <div class="sm:col-span-4 space-y-2">
-                                    <label class="block text-xs font-bold text-slate-700">Image URLs (Comma separated for multiple images)</label>
-                                    <textarea id="prod-image-url" rows="2" placeholder="https://image1.jpg, https://image2.jpg" class="w-full p-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-brand-500"></textarea>
+                                <div class="sm:col-span-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                                    <div>
+                                        <label for="prod-media-files" class="block text-xs font-bold text-slate-800 mb-1">Upload multiple product images and videos</label>
+                                        <input type="file" id="prod-media-files" accept="image/*,video/*" multiple onchange="handleProductMediaFilesChange(event)" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer">
+                                        <p class="text-[11px] text-slate-500 mt-1">Select several photos and videos at once. Files upload to Supabase Storage when you save (configure the <code>product-media</code> bucket once; max 50 MB per file).</p>
+                                    </div>
+                                    <div id="prod-media-preview" class="flex gap-2 overflow-x-auto no-scrollbar py-1" aria-live="polite"></div>
+                                    <div>
+                                        <label for="prod-image-url" class="block text-xs font-bold text-slate-700 mb-1">Or add image/video URLs (one URL per line)</label>
+                                        <textarea id="prod-image-url" rows="3" oninput="renderProductMediaAdminPreview()" placeholder="https://example.com/product-photo.jpg&#10;https://example.com/product-demo.mp4" class="w-full p-2.5 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:border-brand-500"></textarea>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
@@ -1015,6 +1223,11 @@
 
         const defaultTopSlideshowCards = storeConfig.topSlideshowCards.map(slide => ({ ...slide }));
         let productsList = [];
+        let pendingProductMediaFiles = [];
+        let activeDetailMediaItems = [];
+        let activeDetailMediaIndex = 0;
+        const PRODUCT_MEDIA_BUCKET = 'product-media';
+        const PRODUCT_MEDIA_MAX_BYTES = 50 * 1024 * 1024;
 
         window.addEventListener('DOMContentLoaded', async () => {
             updateAdminCurrencyLabels();
@@ -1041,6 +1254,7 @@
             renderAdminCategories();
             renderAdminTopCircles();
             renderAdminTopSlides();
+            renderProductMediaAdminPreview();
         });
 
         async function checkExistingAuth() {
@@ -1663,39 +1877,152 @@
             subSelect.innerHTML = (storeConfig.categories[selectedCat] || []).map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('');
         }
 
-        function getImagesArray(imgString) {
-            if (!imgString || String(imgString).trim() === '') return ['https://placehold.co/400x400/f8fafc/94a3b8?text=No+Image'];
-            return String(imgString).split(',').map(url => url.trim()).filter(url => url.length > 0);
+        function isSafeMediaUrl(value) {
+            try {
+                const parsed = new URL(String(value || '').trim(), window.location.href);
+                return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+            } catch (_) { return false; }
+        }
+
+        function inferMediaType(url, explicitType = '') {
+            if (String(explicitType).toLowerCase() === 'video') return 'video';
+            if (String(explicitType).toLowerCase() === 'image') return 'image';
+            const cleanUrl = String(url || '').split('?')[0].split('#')[0].toLowerCase();
+            return /\.(mp4|webm|mov|m4v|ogv|ogg|3gp|mkv)$/.test(cleanUrl) ? 'video' : 'image';
+        }
+
+        function getProductMedia(mediaValue) {
+            let raw = mediaValue;
+            if (raw && typeof raw === 'object' && !Array.isArray(raw) && 'image_url' in raw) raw = raw.image_url;
+            if (Array.isArray(raw)) {
+                return raw.map(item => typeof item === 'string' ? { url: item, type: inferMediaType(item) } : item)
+                    .filter(item => item && item.url && isSafeMediaUrl(item.url))
+                    .map(item => ({ url: String(item.url).trim(), type: inferMediaType(item.url, item.type), name: item.name || '' }));
+            }
+            const input = String(raw || '').trim();
+            if (!input) return [];
+            try {
+                if (input.startsWith('[')) {
+                    const parsed = JSON.parse(input);
+                    if (Array.isArray(parsed)) return getProductMedia(parsed);
+                }
+            } catch (err) { console.warn('Stored product media JSON could not be parsed; using legacy URL parsing.', err); }
+            return input.split(/[\n,]+/).map(url => url.trim()).filter(Boolean)
+                .filter(isSafeMediaUrl)
+                .map(url => ({ url, type: inferMediaType(url), name: '' }));
+        }
+
+        function getImagesArray(mediaValue) {
+            const images = getProductMedia(mediaValue).filter(item => item.type === 'image').map(item => item.url);
+            return images.length ? images : ['https://placehold.co/400x400/f8fafc/94a3b8?text=No+Image'];
+        }
+
+        function parseProductMediaUrls(text) {
+            return String(text || '').split(/[\n,]+/).map(url => url.trim()).filter(Boolean).map(url => {
+                if (!isSafeMediaUrl(url)) return null;
+                return { url, type: inferMediaType(url), name: '' };
+            }).filter(Boolean);
+        }
+
+        function handleProductMediaFilesChange(event) {
+            pendingProductMediaFiles.forEach(item => { try { URL.revokeObjectURL(item.previewUrl); } catch (_) {} });
+            const files = Array.from((event.target && event.target.files) || []);
+            const oversized = files.filter(file => file.size > PRODUCT_MEDIA_MAX_BYTES);
+            if (oversized.length) showToast('Each image/video must be 50 MB or smaller. Oversized files were skipped.', 'error');
+            pendingProductMediaFiles = files.filter(file => file.size <= PRODUCT_MEDIA_MAX_BYTES).map(file => ({
+                file,
+                previewUrl: URL.createObjectURL(file),
+                type: file.type && file.type.startsWith('video/') ? 'video' : 'image'
+            }));
+            renderProductMediaAdminPreview();
+        }
+
+        function renderProductMediaAdminPreview() {
+            const container = document.getElementById('prod-media-preview');
+            if (!container) return;
+            const urlItems = parseProductMediaUrls(document.getElementById('prod-image-url')?.value || '');
+            const newFileItems = pendingProductMediaFiles.map((item, index) => ({
+                url: item.previewUrl, type: item.type, name: item.file.name, local: true, fileIndex: index
+            }));
+            const items = [...urlItems.map(item => ({ ...item, name: item.url, local: false })), ...newFileItems];
+            if (!items.length) {
+                container.innerHTML = '<p class="text-[11px] text-slate-400 py-2">No product media selected yet.</p>';
+                return;
+            }
+            container.innerHTML = items.map((item, index) => `
+                <div class="admin-media-preview-card shrink-0 rounded-lg border border-slate-200 bg-white p-1.5" title="${escapeHTML(item.name || item.url)}">
+                    <div class="relative overflow-hidden rounded-md">
+                        ${item.type === 'video'
+                            ? `<video src="${escapeHTML(item.url)}" muted playsinline preload="metadata" class="w-full h-[76px] object-contain bg-slate-100"></video><span class="absolute bottom-1 right-1 rounded bg-slate-900/80 text-white text-[9px] px-1">VIDEO</span>`
+                            : `<img src="${escapeHTML(item.url)}" alt="Media preview ${index + 1}" class="w-full h-[76px] object-contain bg-slate-100" onerror="this.style.opacity='.25'">`}
+                    </div>
+                    <p class="text-[10px] font-semibold text-slate-600 truncate mt-1">${escapeHTML(item.local ? item.name : (item.type === 'video' ? 'Video URL' : 'Image URL'))}</p>
+                </div>`).join('');
+        }
+
+        // Supports the new stock_quantity field and gracefully reads older product records.
+        function getProductStockQuantity(product) {
+            if (!product) return null;
+            const raw = product.stock_quantity ?? product.inventory_quantity ?? product.stock ?? product.quantity;
+            if (raw !== undefined && raw !== null && raw !== '') {
+                const number = Number(raw);
+                return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
+            }
+            if (typeof product.in_stock === 'boolean') return product.in_stock ? 1 : 0;
+            const status = String(product.stock_status || '').trim().toLowerCase();
+            if (status) return /out|sold|unavailable|\b0\b/.test(status) ? 0 : 1;
+            // Old catalog rows that do not have an inventory field continue to be purchasable.
+            return null;
+        }
+
+        function isProductInStock(product) {
+            const quantity = getProductStockQuantity(product);
+            return quantity === null || quantity > 0;
+        }
+
+        function getStockStatusHTML(product, compact = false) {
+            const inStock = isProductInStock(product);
+            const quantity = getProductStockQuantity(product);
+            const label = inStock ? (quantity !== null && quantity <= 5 ? `In stock · ${quantity} left` : 'In stock') : 'Out of stock';
+            return `<span class="${compact ? 'product-stock-pill' : 'detail-stock-status'} ${inStock ? 'in-stock' : 'out-of-stock'}" role="status"><span aria-hidden="true">${inStock ? '●' : '●'}</span>${escapeHTML(label)}</span>`;
         }
 
         function renderCardHTML(product) {
             const finalPrice = formatPrice(product.price);
             const origPrice = product.original_price ? formatPrice(product.original_price) : null;
+            const media = getProductMedia(product.image_url);
             const primaryImage = getImagesArray(product.image_url)[0];
-
+            const hasImage = media.some(item => item.type === 'image');
+            const hasVideo = media.some(item => item.type === 'video');
+            const inStock = isProductInStock(product);
             let badgesHTML = '';
             if (product.badge) {
                 badgesHTML = product.badge.split(',').map(b => `<span class="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">${escapeHTML(b.trim())}</span>`).join(' ');
             }
-
+            const mediaPreview = hasImage
+                ? `<img src="${escapeHTML(primaryImage)}" alt="${escapeHTML(product.name)}" loading="lazy" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">`
+                : hasVideo
+                    ? `<div class="w-full h-full flex flex-col items-center justify-center text-brand-600 bg-slate-50"><i data-lucide="circle-play" class="w-10 h-10"></i><span class="text-[10px] font-bold mt-1">VIDEO PRODUCT</span></div>`
+                    : `<img src="${escapeHTML(primaryImage)}" alt="No product image" loading="lazy" class="max-h-full max-w-full object-contain">`;
             return `
-                <div class="product-card min-w-[170px] sm:min-w-[210px] max-w-[170px] sm:max-w-[210px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-200 flex flex-col justify-between p-3 relative group shrink-0">
+                <div class="product-card min-w-[170px] sm:min-w-[210px] max-w-[170px] sm:max-w-[210px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-200 flex flex-col justify-between p-3 relative group shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" tabindex="0" role="group" aria-label="${escapeHTML(product.name)} product card. Select to view full details." onclick="if (!event.target.closest('button, a')) openProductModal('${escapeHTML(product.id)}')" onkeydown="if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('button, a')) { event.preventDefault(); openProductModal('${escapeHTML(product.id)}'); }">
                     <div class="absolute top-3 left-3 z-10 flex flex-col items-start gap-1">${badgesHTML}</div>
-                    <div class="w-full h-32 sm:h-40 flex items-center justify-center cursor-pointer mb-2 relative" onclick="openProductModal('${escapeHTML(product.id)}')">
-                        <img src="${escapeHTML(primaryImage)}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">
-                    </div>
-                    <div class="flex-1 flex flex-col justify-between">
+                    ${media.length > 1 ? `<span class="absolute top-3 right-3 z-10 bg-slate-900/75 text-white text-[9px] font-bold px-2 py-1 rounded-full">${media.length} media</span>` : ''}
+                    <div class="w-full h-32 sm:h-40 flex items-center justify-center mb-2 relative overflow-hidden rounded-lg pointer-events-none">${mediaPreview}</div>
+                    <div class="flex-1 flex flex-col justify-between min-w-0">
                         <div>
-                            <div class="flex items-baseline gap-2 mb-1">
+                            <div class="flex items-baseline gap-2 mb-1 flex-wrap">
                                 <span class="font-black text-brand-600 text-sm sm:text-lg">${escapeHTML(finalPrice)}</span>
                                 ${origPrice ? `<span class="text-[11px] text-slate-400 line-through font-medium">${escapeHTML(origPrice)}</span>` : ''}
                             </div>
                             ${product.brand ? `<span class="inline-block bg-red-50 text-brand-600 text-[10px] font-bold px-2 py-0.5 rounded mb-1 uppercase">${escapeHTML(product.brand)}</span>` : ''}
-                            <h3 onclick="openProductModal('${escapeHTML(product.id)}')" class="text-xs font-medium text-slate-800 line-clamp-2 hover:text-brand-600 cursor-pointer leading-snug mb-2">${escapeHTML(product.name)}</h3>
+                            <h3 class="text-xs font-semibold text-slate-800 line-clamp-2 leading-snug mb-2">${escapeHTML(product.name)}</h3>
+                            <div class="mb-1">${getStockStatusHTML(product, true)}</div>
                         </div>
-                        <button type="button" onclick="addToCart('${escapeHTML(product.id)}')" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-full text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 mt-2">
-                            Add to Cart
-                        </button>
+                        <div class="grid grid-cols-1 gap-1.5 mt-2">
+                            <button type="button" ${inStock ? '' : 'disabled'} onclick="event.stopPropagation(); addToCart('${escapeHTML(product.id)}')" class="w-full min-h-9 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white rounded-full text-[11px] sm:text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Add to Cart</button>
+                            <button type="button" ${inStock ? '' : 'disabled'} onclick="event.stopPropagation(); buyProductNow('${escapeHTML(product.id)}')" class="w-full min-h-8 py-1.5 bg-white border border-brand-200 hover:bg-brand-50 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed text-brand-700 rounded-full text-[11px] font-bold transition-all flex items-center justify-center gap-1"><i data-lucide="zap" class="w-3.5 h-3.5"></i> Buy Now</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1774,43 +2101,113 @@
             container.scrollTo({ left: target, behavior: 'smooth' });
         }
 
+        async function uploadPendingProductMedia(productId) {
+            if (!pendingProductMediaFiles.length) return [];
+            if (!supabaseClient) throw new Error('Supabase is not connected.');
+            const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+            if (userError || !userData?.user) throw new Error('Please sign in as an admin before uploading product media.');
+
+            const uploaded = [];
+            for (const item of pendingProductMediaFiles) {
+                const file = item.file;
+                if (file.size > PRODUCT_MEDIA_MAX_BYTES) throw new Error(`${file.name} is larger than 50 MB.`);
+                const safeName = file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'media-file';
+                const objectPath = `products/${productId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+                const { error } = await supabaseClient.storage.from(PRODUCT_MEDIA_BUCKET).upload(objectPath, file, {
+                    cacheControl: '3600',
+                    upsert: false,
+                    contentType: file.type || undefined
+                });
+                if (error) {
+                    if (/bucket|not found|does not exist/i.test(error.message || '')) {
+                        throw new Error(`Supabase Storage bucket "${PRODUCT_MEDIA_BUCKET}" is missing. Create the bucket and policies using the SQL provided with this file, then retry.`);
+                    }
+                    throw new Error(`Could not upload ${file.name}: ${error.message}`);
+                }
+                const { data: publicData } = supabaseClient.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(objectPath);
+                if (!publicData?.publicUrl) throw new Error(`Uploaded ${file.name}, but Supabase did not return a public URL.`);
+                uploaded.push({ url: publicData.publicUrl, type: file.type.startsWith('video/') ? 'video' : 'image', name: file.name });
+            }
+            return uploaded;
+        }
+
         async function handleProductSubmit(e) {
             e.preventDefault();
-            const id = document.getElementById('prod-id').value.trim();
-            const curr = currencies[activeCurrency] || currencies.USD;
-            
-            const enteredPrice = parseFloat(document.getElementById('prod-price').value);
-            const baseUsdPrice = isNaN(enteredPrice) ? 0 : (enteredPrice / curr.rate);
-            
-            const origPriceInput = document.getElementById('prod-original-price').value;
-            const baseUsdOrigPrice = origPriceInput === '' ? null : (parseFloat(origPriceInput) / curr.rate);
+            if (!isAdminLoggedIn) { showToast('Admin sign-in is required to save products.', 'error'); return; }
+            if (!supabaseClient) { showToast('Database client is not initialized.', 'error'); return; }
 
-            const productData = {
-                id: id || 'prod-' + Date.now(),
-                name: document.getElementById('prod-title').value,
-                price: baseUsdPrice,
-                original_price: baseUsdOrigPrice, 
-                brand: document.getElementById('prod-brand').value,
-                badge: document.getElementById('prod-badge').value,
-                category: document.getElementById('prod-category').value,
-                subcategory: document.getElementById('prod-subcategory').value,
-                image_url: document.getElementById('prod-image-url').value, 
-                buy_url: document.getElementById('prod-buylink').value,
-                description: document.getElementById('prod-description').value,
-            };
+            const saveButton = document.getElementById('save-prod-btn');
+            const originalButtonHTML = saveButton.innerHTML;
+            saveButton.disabled = true;
+            saveButton.classList.add('opacity-70', 'cursor-wait');
+            saveButton.innerHTML = '<i data-lucide="loader-circle" class="w-4 h-4 animate-spin"></i> Saving product...';
+            if (window.lucide) lucide.createIcons();
 
-            if (supabaseClient) {
-                try {
-                    const { error } = await supabaseClient.from('products').upsert(productData);
-                    if (error) throw error;
-                    showToast("Product saved to Supabase successfully!", "success");
-                    await fetchProductsFromSupabase();
-                } catch (err) {
-                    showToast("Error saving product: " + err.message, "error");
+            try {
+                const id = document.getElementById('prod-id').value.trim();
+                const productId = id || 'prod-' + Date.now();
+                const curr = currencies[activeCurrency] || currencies.USD;
+                const enteredPrice = parseFloat(document.getElementById('prod-price').value);
+                const baseUsdPrice = isNaN(enteredPrice) ? 0 : (enteredPrice / curr.rate);
+                const origPriceInput = document.getElementById('prod-original-price').value;
+                const baseUsdOrigPrice = origPriceInput === '' ? null : (parseFloat(origPriceInput) / curr.rate);
+
+                // URLs typed by the admin remain compatible with old comma-separated image_url values.
+                const remoteMedia = parseProductMediaUrls(document.getElementById('prod-image-url').value);
+                const typedMediaCount = String(document.getElementById('prod-image-url').value || '').split(/[\n,]+/).filter(v => v.trim()).length;
+                if (typedMediaCount > remoteMedia.length) showToast('Some media URLs were skipped. Only valid http:// or https:// links are supported.', 'error');
+                const uploadedMedia = await uploadPendingProductMedia(productId);
+                const productMedia = [...remoteMedia, ...uploadedMedia];
+
+                const productData = {
+                    id: productId,
+                    name: document.getElementById('prod-title').value.trim(),
+                    price: baseUsdPrice,
+                    original_price: baseUsdOrigPrice,
+                    brand: document.getElementById('prod-brand').value.trim(),
+                    badge: document.getElementById('prod-badge').value.trim(),
+                    category: document.getElementById('prod-category').value,
+                    subcategory: document.getElementById('prod-subcategory').value,
+                    image_url: JSON.stringify(productMedia),
+                    buy_url: document.getElementById('prod-buylink').value.trim(),
+                    description: document.getElementById('prod-description').value.trim(),
+                    stock_quantity: Math.max(0, Math.floor(Number(document.getElementById('prod-stock-quantity').value || 0)))
+                };
+                let stockSaved = true;
+                let { error } = await supabaseClient.from('products').upsert(productData);
+                if (error && /stock_quantity|schema cache|column .* does not exist/i.test(String(error.message || error))) {
+                    // Keep the rest of the storefront usable if the one-time SQL migration has not run yet.
+                    const legacyProductData = { ...productData };
+                    delete legacyProductData.stock_quantity;
+                    const retry = await supabaseClient.from('products').upsert(legacyProductData);
+                    if (retry.error) throw retry.error;
+                    stockSaved = false;
+                } else if (error) {
+                    throw error;
                 }
+                showToast(stockSaved ? 'Product, inventory and media saved successfully!' : 'Product saved, but inventory was not saved. Run stock-migration.sql in Supabase to enable stock tracking.', stockSaved ? 'success' : 'error');
+                clearPendingProductMediaFiles();
+                document.getElementById('prod-media-files').value = '';
+                resetProductForm();
+                await fetchProductsFromSupabase();
+                switchAdminTab('tab-manage-products');
+            } catch (err) {
+                console.error('Product save/upload error:', err);
+                showToast('Could not save product: ' + (err.message || 'Unknown error'), 'error');
+            } finally {
+                saveButton.disabled = false;
+                saveButton.classList.remove('opacity-70', 'cursor-wait');
+                saveButton.innerHTML = originalButtonHTML;
+                if (window.lucide) lucide.createIcons();
             }
+        }
 
-            switchAdminTab('tab-manage-products');
+        function clearPendingProductMediaFiles() {
+            pendingProductMediaFiles.forEach(item => { try { URL.revokeObjectURL(item.previewUrl); } catch (_) {} });
+            pendingProductMediaFiles = [];
+            const input = document.getElementById('prod-media-files');
+            if (input) input.value = '';
+            renderProductMediaAdminPreview();
         }
 
         async function deleteProduct(id) {
@@ -1938,9 +2335,18 @@
         }
 
         function addToCart(productId) {
-            const product = productsList.find(p => p.id === productId);
+            const product = productsList.find(p => String(p.id) === String(productId));
             if (!product) return;
-            const existingItem = cart.find(item => item.id === productId);
+            if (!isProductInStock(product)) {
+                showToast('This product is out of stock.', 'error');
+                return;
+            }
+            const existingItem = cart.find(item => String(item.id) === String(productId));
+            const available = getProductStockQuantity(product);
+            if (existingItem && available !== null && existingItem.quantity >= available) {
+                showToast('You have reached the available stock for this product.', 'error');
+                return;
+            }
             if (existingItem) existingItem.quantity += 1;
             else cart.push({ id: product.id, name: product.name, price: product.price, image: getImagesArray(product.image_url)[0], quantity: 1 });
             updateCartUI();
@@ -1948,10 +2354,19 @@
         }
 
         function updateCartQuantity(productId, change) {
-            const item = cart.find(i => i.id === productId);
+            const item = cart.find(i => String(i.id) === String(productId));
             if (!item) return;
+            const product = productsList.find(p => String(p.id) === String(productId));
+            if (change > 0 && product) {
+                if (!isProductInStock(product)) { showToast('This product is out of stock.', 'error'); return; }
+                const available = getProductStockQuantity(product);
+                if (available !== null && item.quantity >= available) {
+                    showToast('You have reached the available stock for this product.', 'error');
+                    return;
+                }
+            }
             item.quantity += change;
-            if (item.quantity <= 0) cart = cart.filter(i => i.id !== productId);
+            if (item.quantity <= 0) cart = cart.filter(i => String(i.id) !== String(productId));
             updateCartUI();
         }
 
@@ -1993,33 +2408,97 @@
 
         function checkoutCart() {
             if (cart.length === 0) { showToast('Your cart is empty', 'error'); return; }
-            showToast('Order placed successfully!', 'success');
-            cart = [];
-            updateCartUI();
-            closeModal('cart-modal');
+            // A real order must be created by a trusted server/payment integration; do not fake a successful order here.
+            showToast('Checkout is not connected yet. Connect your order/payment provider before accepting orders.', 'error');
         }
 
         function openProductModal(id) {
-            const product = productsList.find(p => p.id === id);
+            const product = productsList.find(p => String(p.id) === String(id));
             if (!product) return;
-            const imageArray = getImagesArray(product.image_url);
-            document.getElementById('detail-main-image').src = imageArray[0];
-            document.getElementById('detail-category').innerText = `${product.category} > ${product.subcategory || ''}`;
-            document.getElementById('detail-title').innerText = product.name;
-            document.getElementById('detail-price-container').innerHTML = `<span class="text-3xl font-black text-slate-900">${formatPrice(product.price)}</span>`;
-            document.getElementById('detail-description').innerText = product.description || "No description provided.";
-            
-            document.getElementById('detail-buy-btn').onclick = () => { 
-                if(product.buy_url) window.open(product.buy_url, '_blank'); 
-                else showToast('No direct buy link configured', 'error'); 
-            };
-
-            document.getElementById('detail-cart-btn').onclick = () => {
+            activeDetailMediaItems = getProductMedia(product.image_url);
+            if (!activeDetailMediaItems.length) activeDetailMediaItems = [{ url: 'https://placehold.co/800x800/f8fafc/94a3b8?text=No+Product+Media', type: 'image', name: 'No media' }];
+            activeDetailMediaIndex = 0;
+            document.getElementById('detail-category').innerText = [product.category, product.subcategory].filter(Boolean).join('  ›  ') || 'Product';
+            document.getElementById('detail-title').innerText = product.name || 'Product';
+            const priceContainer = document.getElementById('detail-price-container');
+            priceContainer.innerHTML = `<span class="detail-current-price text-3xl font-black text-slate-900">${escapeHTML(formatPrice(product.price))}</span>${product.original_price ? `<span class="text-sm font-semibold text-slate-400 line-through">${escapeHTML(formatPrice(product.original_price))}</span>` : ''}`;
+            document.getElementById('detail-description').innerText = product.description || 'No description provided.';
+            const stockStatus = document.getElementById('detail-stock-status');
+            const inStock = isProductInStock(product);
+            const quantity = getProductStockQuantity(product);
+            stockStatus.className = `detail-stock-status ${inStock ? 'in-stock' : 'out-of-stock'}`;
+            stockStatus.innerHTML = `<span aria-hidden="true">●</span>${escapeHTML(inStock ? (quantity !== null && quantity <= 5 ? `In stock · ${quantity} left` : 'In stock') : 'Out of stock')}`;
+            const cartButton = document.getElementById('detail-cart-btn');
+            const buyButton = document.getElementById('detail-buy-btn');
+            cartButton.disabled = !inStock;
+            buyButton.disabled = !inStock;
+            cartButton.setAttribute('aria-disabled', String(!inStock));
+            buyButton.setAttribute('aria-disabled', String(!inStock));
+            cartButton.onclick = () => {
+                if (!isProductInStock(product)) { showToast('This product is out of stock.', 'error'); return; }
                 addToCart(product.id);
                 closeModal('product-detail-modal');
             };
-
+            buyButton.onclick = () => buyProductNow(product.id);
+            document.getElementById('detail-info-panel').scrollTop = 0;
             openModal('product-detail-modal');
+            document.body.classList.add('product-detail-open');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function renderDetailMedia() {
+            const stage = document.getElementById('detail-media-stage');
+            const thumbs = document.getElementById('detail-media-thumbnails');
+            const count = document.getElementById('detail-media-count');
+            if (!stage || !thumbs || !activeDetailMediaItems.length) return;
+            activeDetailMediaIndex = Math.max(0, Math.min(activeDetailMediaIndex, activeDetailMediaItems.length - 1));
+            const current = activeDetailMediaItems[activeDetailMediaIndex];
+            if (current.type === 'video') {
+                const poster = activeDetailMediaItems.find(item => item.type === 'image')?.url;
+                stage.innerHTML = `<video src="${escapeHTML(current.url)}" ${poster ? `poster="${escapeHTML(poster)}"` : ''} controls playsinline preload="metadata" class="w-full h-full bg-slate-950" aria-label="Product video"></video>`;
+            } else {
+                stage.innerHTML = `<img src="${escapeHTML(current.url)}" alt="Product image ${activeDetailMediaIndex + 1}" class="w-full h-full object-contain p-2 sm:p-4" loading="eager" onerror="this.alt='Image could not be loaded'; this.style.opacity='.35'">`;
+            }
+            thumbs.innerHTML = activeDetailMediaItems.map((item, index) => `
+                <button type="button" onclick="selectDetailMedia(${index})" aria-label="Show product ${item.type} ${index + 1}" aria-current="${index === activeDetailMediaIndex ? 'true' : 'false'}" class="relative w-16 h-16 rounded-lg border-2 ${index === activeDetailMediaIndex ? 'border-brand-600' : 'border-slate-200'} bg-white overflow-hidden shrink-0 p-1">
+                    ${item.type === 'video'
+                        ? `<video src="${escapeHTML(item.url)}" muted playsinline preload="metadata" class="w-full h-full object-contain pointer-events-none"></video><span class="absolute inset-0 flex items-center justify-center text-white"><span class="bg-slate-900/65 rounded-full p-1"><i data-lucide="play" class="w-3 h-3"></i></span></span>`
+                        : `<img src="${escapeHTML(item.url)}" alt="Thumbnail ${index + 1}" class="w-full h-full object-contain" loading="lazy">`}
+                </button>`).join('');
+            count.textContent = `${activeDetailMediaIndex + 1} of ${activeDetailMediaItems.length} ${activeDetailMediaItems.length === 1 ? 'item' : 'items'} · ${current.type === 'video' ? 'Video' : 'Image'}`;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function selectDetailMedia(index) {
+            if (!activeDetailMediaItems.length) return;
+            const oldVideo = document.querySelector('#detail-media-stage video');
+            if (oldVideo) { try { oldVideo.pause(); } catch (_) {} }
+            activeDetailMediaIndex = index;
+            renderDetailMedia();
+        }
+
+        function changeDetailMedia(direction) {
+            if (!activeDetailMediaItems.length) return;
+            const nextIndex = (activeDetailMediaIndex + direction + activeDetailMediaItems.length) % activeDetailMediaItems.length;
+            selectDetailMedia(nextIndex);
+        }
+
+        function buyProductNow(productId) {
+            const product = productsList.find(p => String(p.id) === String(productId));
+            if (!product) return;
+            if (!isProductInStock(product)) {
+                showToast('This product is out of stock.', 'error');
+                return;
+            }
+            const externalUrl = String(product.buy_url || '').trim();
+            if (externalUrl && isSafeMediaUrl(externalUrl)) {
+                window.open(externalUrl, '_blank', 'noopener,noreferrer');
+                return;
+            }
+            addToCart(product.id);
+            closeModal('product-detail-modal');
+            openCartModal();
+            showToast('Product added to your cart. Continue from the cart to checkout.', 'success');
         }
 
         function handleAdminNavClick() { isAdminLoggedIn ? openAdminDashboard() : openModal('admin-auth-modal'); }
@@ -2092,16 +2571,21 @@
         }
 
         function resetProductForm() {
+            clearPendingProductMediaFiles();
             document.getElementById('prod-id').value = '';
             document.getElementById('prod-title').value = '';
             document.getElementById('prod-price').value = '';
             document.getElementById('prod-original-price').value = '';
+            document.getElementById('prod-stock-quantity').value = '100';
             document.getElementById('prod-brand').value = '';
             document.getElementById('prod-badge').value = '';
             document.getElementById('prod-image-url').value = '';
             document.getElementById('prod-buylink').value = '';
             document.getElementById('prod-description').value = '';
+            const fileInput = document.getElementById('prod-media-files');
+            if (fileInput) fileInput.value = '';
             document.getElementById('form-heading-title').innerText = "Add New Product";
+            renderProductMediaAdminPreview();
         }
 
         function editProduct(id) {
@@ -2109,17 +2593,20 @@
             if (!prod) return;
             document.getElementById('prod-id').value = prod.id;
             document.getElementById('prod-title').value = prod.name;
-            document.getElementById('prod-price').value = prod.price;
-            document.getElementById('prod-original-price').value = prod.original_price || '';
+            document.getElementById('prod-price').value = (Number(prod.price || 0) * (currencies[activeCurrency] || currencies.USD).rate).toFixed(2);
+            document.getElementById('prod-original-price').value = prod.original_price == null ? '' : (Number(prod.original_price) * (currencies[activeCurrency] || currencies.USD).rate).toFixed(2);
+            document.getElementById('prod-stock-quantity').value = String(getProductStockQuantity(prod) ?? 100);
             document.getElementById('prod-brand').value = prod.brand || '';
             document.getElementById('prod-badge').value = prod.badge || '';
             document.getElementById('prod-category').value = prod.category;
             updateSubcategoryDropdown();
             document.getElementById('prod-subcategory').value = prod.subcategory;
-            document.getElementById('prod-image-url').value = prod.image_url || '';
+            clearPendingProductMediaFiles();
+            document.getElementById('prod-image-url').value = getProductMedia(prod.image_url).map(item => item.url).join('\n');
             document.getElementById('prod-buylink').value = prod.buy_url || '';
             document.getElementById('prod-description').value = prod.description || '';
             document.getElementById('form-heading-title').innerText = "Edit Product";
+            renderProductMediaAdminPreview();
             switchAdminTab('tab-add-product');
         }
 
@@ -2403,7 +2890,7 @@
 
         function openCartModal() { openModal('cart-modal'); }
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); if (id === 'product-detail-modal') document.body.classList.remove('product-detail-open'); }
         
         function switchAdminTab(tabId) {
             document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
