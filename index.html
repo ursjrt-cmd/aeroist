@@ -1990,25 +1990,20 @@
         function renderCardHTML(product) {
             const finalPrice = formatPrice(product.price);
             const origPrice = product.original_price ? formatPrice(product.original_price) : null;
-            const media = getProductMedia(product.image_url);
+            // Front cards intentionally show exactly one primary image. The full image/video gallery
+            // is rendered only after the visitor opens the product details modal.
             const primaryImage = getImagesArray(product.image_url)[0];
-            const hasImage = media.some(item => item.type === 'image');
-            const hasVideo = media.some(item => item.type === 'video');
             const inStock = isProductInStock(product);
             let badgesHTML = '';
             if (product.badge) {
                 badgesHTML = product.badge.split(',').map(b => `<span class="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">${escapeHTML(b.trim())}</span>`).join(' ');
             }
-            const mediaPreview = hasImage
-                ? `<img src="${escapeHTML(primaryImage)}" alt="${escapeHTML(product.name)}" loading="lazy" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">`
-                : hasVideo
-                    ? `<div class="w-full h-full flex flex-col items-center justify-center text-brand-600 bg-slate-50"><i data-lucide="circle-play" class="w-10 h-10"></i><span class="text-[10px] font-bold mt-1">VIDEO PRODUCT</span></div>`
-                    : `<img src="${escapeHTML(primaryImage)}" alt="No product image" loading="lazy" class="max-h-full max-w-full object-contain">`;
             return `
-                <div class="product-card min-w-[170px] sm:min-w-[210px] max-w-[170px] sm:max-w-[210px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-200 flex flex-col justify-between p-3 relative group shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" tabindex="0" role="group" aria-label="${escapeHTML(product.name)} product card. Select to view full details." onclick="if (!event.target.closest('button, a')) openProductModal('${escapeHTML(product.id)}')" onkeydown="if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('button, a')) { event.preventDefault(); openProductModal('${escapeHTML(product.id)}'); }">
+                <div class="product-card min-w-[170px] sm:min-w-[210px] max-w-[170px] sm:max-w-[210px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-200 flex flex-col justify-between p-3 relative group shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" tabindex="0" role="button" aria-label="Open details for ${escapeHTML(product.name)}" onclick="if (!event.target.closest('button, a')) openProductModal('${escapeHTML(product.id)}')" onkeydown="if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('button, a')) { event.preventDefault(); openProductModal('${escapeHTML(product.id)}'); }">
                     <div class="absolute top-3 left-3 z-10 flex flex-col items-start gap-1">${badgesHTML}</div>
-                    ${media.length > 1 ? `<span class="absolute top-3 right-3 z-10 bg-slate-900/75 text-white text-[9px] font-bold px-2 py-1 rounded-full">${media.length} media</span>` : ''}
-                    <div class="w-full h-32 sm:h-40 flex items-center justify-center mb-2 relative overflow-hidden rounded-lg pointer-events-none">${mediaPreview}</div>
+                    <div class="w-full h-32 sm:h-40 flex items-center justify-center mb-2 relative overflow-hidden rounded-lg bg-slate-50 pointer-events-none">
+                        <img src="${escapeHTML(primaryImage)}" alt="${escapeHTML(product.name || 'Product image')}" loading="lazy" class="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='https://placehold.co/400x400/f8fafc/94a3b8?text=No+Image'">
+                    </div>
                     <div class="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                             <div class="flex items-baseline gap-2 mb-1 flex-wrap">
@@ -2017,7 +2012,6 @@
                             </div>
                             ${product.brand ? `<span class="inline-block bg-red-50 text-brand-600 text-[10px] font-bold px-2 py-0.5 rounded mb-1 uppercase">${escapeHTML(product.brand)}</span>` : ''}
                             <h3 class="text-xs font-semibold text-slate-800 line-clamp-2 leading-snug mb-2">${escapeHTML(product.name)}</h3>
-                            <div class="mb-1">${getStockStatusHTML(product, true)}</div>
                         </div>
                         <div class="grid grid-cols-1 gap-1.5 mt-2">
                             <button type="button" ${inStock ? '' : 'disabled'} onclick="event.stopPropagation(); addToCart('${escapeHTML(product.id)}')" class="w-full min-h-9 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 disabled:text-slate-600 disabled:cursor-not-allowed text-white rounded-full text-[11px] sm:text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> Add to Cart</button>
@@ -2415,7 +2409,13 @@
         function openProductModal(id) {
             const product = productsList.find(p => String(p.id) === String(id));
             if (!product) return;
-            activeDetailMediaItems = getProductMedia(product.image_url);
+            const productMedia = getProductMedia(product.image_url);
+            // Start on a still product photo when available, then keep all remaining photos and videos
+            // available through the detail-view thumbnail gallery.
+            activeDetailMediaItems = [
+                ...productMedia.filter(item => item.type === 'image'),
+                ...productMedia.filter(item => item.type === 'video')
+            ];
             if (!activeDetailMediaItems.length) activeDetailMediaItems = [{ url: 'https://placehold.co/800x800/f8fafc/94a3b8?text=No+Product+Media', type: 'image', name: 'No media' }];
             activeDetailMediaIndex = 0;
             document.getElementById('detail-category').innerText = [product.category, product.subcategory].filter(Boolean).join('  ›  ') || 'Product';
@@ -2441,6 +2441,7 @@
             };
             buyButton.onclick = () => buyProductNow(product.id);
             document.getElementById('detail-info-panel').scrollTop = 0;
+            renderDetailMedia();
             openModal('product-detail-modal');
             document.body.classList.add('product-detail-open');
             if (window.lucide) lucide.createIcons();
