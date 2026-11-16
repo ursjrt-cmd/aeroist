@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title id="html-title-tag">JRT Blog | Think & Search</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f5ff',
+              100: '#e0ebff',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    .theme-card {
+      background-color: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+    }
+    .light .theme-card {
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      color: #0f172a;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .theme-nav {
+      background-color: rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    }
+    .light .theme-nav {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .theme-input {
+      background-color: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      color: #f8fafc;
+    }
+    .light .theme-input {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+    }
+
+    .highlight-match {
+      background-color: rgba(250, 204, 21, 0.3);
+      color: #fef08a;
+      padding: 0 2px;
+      border-radius: 2px;
+      font-weight: 600;
+    }
+    .light .highlight-match {
+      background-color: rgba(253, 224, 71, 0.6);
+      color: #854d0e;
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body id="app-body" class="bg-slate-950 text-slate-100 font-sans transition-colors duration-300 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Top Reading Progress Bar -->
+  <div id="progress-container" class="fixed top-0 left-0 w-full h-1 z-50 bg-slate-800/50 hidden">
+    <div id="reading-progress" class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 w-0 transition-all duration-150"></div>
+  </div>
+
+  <!-- Header Navigation Bar -->
+  <header class="sticky top-0 z-40 backdrop-blur-md theme-nav transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
+      
+      <!-- Dynamic Brand Logo & Site Name -->
+      <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+        <div class="flex items-center space-x-2 shrink-0 cursor-pointer" onclick="app.resetToHome()">
+          <div id="brand-logo-icon" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-display font-extrabold text-base sm:text-xl shadow-lg shrink-0 overflow-hidden">
+            O
+          </div>
+          <div class="flex flex-col">
+            <span id="header-site-title" class="font-display font-bold text-base sm:text-xl tracking-tight leading-none">
+              Omni<span class="text-brand-500">Blog</span>
+            </span>
+            <span id="header-site-tagline" class="text-[8px] sm:text-[10px] tracking-wider uppercase block opacity-70 font-semibold truncate max-w-[90px] sm:max-w-[180px]">Search & Intelligence</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Header Search Input (Tablet & Desktop) -->
+      <div class="flex-1 max-w-md mx-2 relative hidden sm:block">
+        <div class="relative flex items-center">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-xs sm:text-sm"></i>
+          <input 
+            type="text" 
+            id="header-search-input"
+            placeholder="Search articles, podcasts, videos..." 
+            class="w-full theme-input rounded-full pl-9 pr-9 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+            oninput="app.handleSearchInput(this.value)"
+            onkeydown="if(event.key==='Enter') app.executeSearch()"
+          >
+          <button id="header-clear-btn" class="absolute right-3 text-slate-400 hover:text-red-400 hidden" onclick="app.clearSearch()">
+            <i class="fa-solid fa-circle-xmark text-xs sm:text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Header Controls (Right Side) -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+        <!-- Bookmark Button -->
+        <button onclick="app.filterByMedia('bookmarks')" class="relative p-2 rounded-xl theme-input hover:border-brand-500 transition-all text-xs sm:text-sm" title="Saved Bookmarks">
+          <i class="fa-solid fa-bookmark text-amber-400"></i>
+          <span id="bookmark-count-badge" class="absolute -top-1 -right-1 bg-brand-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
+        </button>
+
+        <!-- View Mode Switcher -->
+        <div class="relative">
+          <button id="view-mode-btn" onclick="app.toggleViewDropdown()" class="p-2 rounded-xl theme-input hover:border-brand-500 flex items-center gap-1.5 text-xs sm:text-sm transition-all">
+            <i id="view-mode-icon" class="fa-solid fa-list"></i>
+            <span id="view-mode-label" class="hidden md:inline">List View</span>
+            <i class="fa-solid fa-chevron-down text-[10px] opacity-60"></i>
+          </button>
+          
+          <div id="view-dropdown" class="absolute right-0 mt-2 w-44 sm:w-48 theme-card rounded-xl shadow-2xl py-1.5 hidden z-50">
+            <button onclick="app.setViewMode('list')" class="w-full text-left px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-brand-600 hover:text-white flex items-center gap-2">
+              <i class="fa-solid fa-list text-brand-400"></i> List View
+            </button>
+            <button onclick="app.setViewMode('grid')" class="w-full text-left px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-brand-600 hover:text-white flex items-center gap-2">
+              <i class="fa-solid fa-grip text-emerald-400"></i> Grid Cards
+            </button>
+            <button onclick="app.setViewMode('media')" class="w-full text-left px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-brand-600 hover:text-white flex items-center gap-2">
+              <i class="fa-solid fa-photo-film text-purple-400"></i> Visual Media Wall
+            </button>
+          </div>
+        </div>
+
+        <!-- Light/Dark Vision Switcher -->
+        <button onclick="app.toggleTheme()" class="p-2 rounded-xl theme-input hover:border-brand-500 transition-all text-xs sm:text-sm" title="Toggle Light/Dark Vision Mode">
+          <i id="theme-icon" class="fa-solid fa-moon text-white"></i>
+        </button>
+
+        <!-- Admin Auth Header Button (Right Side Separated) -->
+        <div id="admin-auth-header-btn" class="border-l border-slate-700/60 pl-1.5 sm:pl-2.5"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+
+    <!-- VIEW 1: SEARCH & EXPLORER -->
+    <section id="search-view-container" class="space-y-4 sm:space-y-6">
+      
+      <!-- Hero Search Section -->
+      <div id="hero-search-block" class="py-4 sm:py-10 text-center max-w-3xl mx-auto space-y-4 sm:space-y-6 px-1">
+        <h1 class="text-2xl sm:text-5xl md:text-6xl font-display font-extrabold tracking-tight leading-tight">
+          <span id="hero-title-main">Explore Knowledge</span> <br class="hidden sm:block"/> <span id="hero-title-highlight" class="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">In Depth</span>
+        </h1>
+        <p id="hero-subtitle" class="opacity-70 text-xs sm:text-base max-w-xl mx-auto leading-relaxed">
+          Comprehensive search across long-form research, video tutorials, audio podcasts, and media insights.
+        </p>
+
+        <!-- Mobile & Desktop Hero Search Box -->
+        <div class="relative max-w-2xl mx-auto">
+          <div class="relative flex items-center shadow-xl sm:shadow-2xl rounded-xl sm:rounded-2xl theme-input focus-within:ring-2 focus-within:ring-brand-500 transition-all">
+            <i class="fa-solid fa-magnifying-glass left-3.5 sm:left-4 absolute text-slate-400 text-sm sm:text-lg"></i>
+            <input 
+              type="text" 
+              id="hero-search-input"
+              placeholder="Search by topic, keyword, author..." 
+              class="w-full bg-transparent pl-9 sm:pl-12 pr-20 sm:pr-28 py-2.5 sm:py-4 text-xs sm:text-base focus:outline-none rounded-xl sm:rounded-2xl"
+              oninput="app.handleSearchInput(this.value)"
+              onkeydown="if(event.key==='Enter') app.executeSearch()"
+              autocomplete="off"
+            >
+            <div class="absolute right-1.5 sm:right-3 flex items-center space-x-1 sm:space-x-2">
+              <button id="hero-clear-btn" class="text-slate-400 hover:text-red-400 p-1 hidden" onclick="app.clearSearch()">
+                <i class="fa-solid fa-circle-xmark text-sm sm:text-lg"></i>
+              </button>
+              <button onclick="app.executeSearch()" class="bg-brand-600 hover:bg-brand-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md">
+                Search
+              </button>
+            </div>
+          </div>
+
+          <div id="autocomplete-dropdown" class="absolute left-0 right-0 top-full mt-2 theme-card rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden hidden z-50 text-left divide-y divide-slate-700/50"></div>
+        </div>
+      </div>
+
+      <!-- Media Type Filter Bar -->
+      <div class="border-b border-slate-700/50 flex items-center justify-between gap-2 overflow-x-auto pb-1.5 no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
+        <div class="flex items-center space-x-1 min-w-max">
+          <button onclick="app.filterByMedia('all')" id="media-tab-all" class="media-tab-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border-b-2 border-brand-500 text-brand-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-globe text-[11px]"></i> All Results
+          </button>
+          <button onclick="app.filterByMedia('articles')" id="media-tab-articles" class="media-tab-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border-b-2 border-transparent opacity-70 hover:opacity-100 flex items-center gap-1.5">
+            <i class="fa-regular fa-file-lines text-[11px]"></i> Articles
+          </button>
+          <button onclick="app.filterByMedia('photos')" id="media-tab-photos" class="media-tab-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border-b-2 border-transparent opacity-70 hover:opacity-100 flex items-center gap-1.5">
+            <i class="fa-regular fa-image text-[11px]"></i> Photos
+          </button>
+          <button onclick="app.filterByMedia('videos')" id="media-tab-videos" class="media-tab-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border-b-2 border-transparent opacity-70 hover:opacity-100 flex items-center gap-1.5">
+            <i class="fa-solid fa-film text-[11px]"></i> Videos
+          </button>
+          <button onclick="app.filterByMedia('podcasts')" id="media-tab-podcasts" class="media-tab-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border-b-2 border-transparent opacity-70 hover:opacity-100 flex items-center gap-1.5">
+            <i class="fa-solid fa-podcast text-[11px]"></i> Podcasts
+          </button>
+          <button onclick="app.filterByMedia('bookmarks')" id="media-tab-bookmarks" class="media-tab-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border-b-2 border-transparent opacity-70 hover:opacity-100 flex items-center gap-1.5">
+            <i class="fa-solid fa-bookmark text-[11px] text-amber-400"></i> Bookmarks
+          </button>
+        </div>
+
+        <div class="text-[11px] opacity-70 hidden lg:block whitespace-nowrap">
+          Showing <span id="results-count" class="font-bold text-brand-400">0</span> indexed posts
+        </div>
+      </div>
+
+      <!-- Categories Filter Bar -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div id="category-pills-bar" class="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar w-full sm:flex-1 -mx-3 px-3 sm:mx-0 sm:px-0"></div>
+
+        <div class="flex items-center space-x-2 min-w-max self-end sm:self-auto shrink-0">
+          <label for="sort-select" class="text-[11px] opacity-70 hidden sm:inline">Sort:</label>
+          <select id="sort-select" onchange="app.handleSortChange(this.value)" class="theme-input text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-brand-500">
+            <option value="relevance">Most Relevant</option>
+            <option value="latest">Latest First</option>
+            <option value="likes">Most Popular</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Results Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
+        
+        <div class="lg:col-span-3 space-y-4 sm:space-y-6">
+          <div id="search-meta-banner" class="hidden text-xs sm:text-sm opacity-80 theme-card p-3 rounded-xl flex items-center justify-between">
+            <span>Showing matches for <strong id="active-search-term" class="text-brand-400">""</strong></span>
+            <button onclick="app.clearSearch()" class="text-xs hover:underline text-brand-400">Clear Search</button>
+          </div>
+
+          <div id="posts-container" class="space-y-4 sm:space-y-6"></div>
+
+          <div id="empty-state" class="hidden text-center py-12 sm:py-16 theme-card rounded-2xl p-6 sm:p-8 space-y-3 sm:space-y-4">
+            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400 text-xl sm:text-2xl">
+              <i class="fa-solid fa-magnifying-glass-slash"></i>
+            </div>
+            <h3 class="text-lg sm:text-xl font-bold">No matching posts found</h3>
+            <p class="opacity-70 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">Try adjusting your keywords, selecting a different media tab, or resetting active topic filters.</p>
+            <button onclick="app.resetAllFilters()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all shadow-md">
+              Reset All Filters
+            </button>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="space-y-4 sm:space-y-6">
+          
+          <div class="theme-card rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-podcast"></i> Featured Audio
+              </span>
+              <span class="text-[9px] bg-brand-900/60 text-brand-300 px-2 py-0.5 rounded-full font-mono">AUDIO</span>
+            </div>
+            <div>
+              <h4 id="featured-audio-title" class="font-bold text-xs sm:text-sm hover:text-brand-400 transition-colors cursor-pointer leading-snug" onclick="app.openFeaturedAudioPost()">
+                Quantum Computing & Room-Temp Superconductors
+              </h4>
+              <p id="featured-audio-snippet" class="text-[11px] sm:text-xs opacity-70 mt-1 line-clamp-2">Listen to Dr. Sarah Lin discuss zero-resistance energy grids.</p>
+            </div>
+            
+            <div class="theme-input rounded-xl p-2.5 sm:p-3 space-y-2">
+              <div class="flex items-center justify-between text-[10px] sm:text-xs opacity-70">
+                <span id="mini-audio-time" class="font-mono">00:00</span>
+                <span id="mini-audio-duration" class="font-mono">14:00</span>
+              </div>
+              <div class="w-full bg-slate-700/50 h-1.5 rounded-full overflow-hidden cursor-pointer" onclick="app.seekAudio(event)">
+                <div id="mini-audio-bar" class="bg-brand-500 h-full w-0"></div>
+              </div>
+              <div class="flex items-center justify-between pt-1">
+                <button onclick="app.toggleSidebarAudio()" id="mini-play-btn" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-600 text-white flex items-center justify-center hover:bg-brand-500 transition-all text-xs">
+                  <i class="fa-solid fa-play"></i>
+                </button>
+                <div class="text-[9px] sm:text-[10px] opacity-70 flex items-center gap-1">
+                  <i class="fa-solid fa-volume-high"></i> Stereo HQ
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="theme-card rounded-2xl p-4 sm:p-5 space-y-3">
+            <h3 class="font-display font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-fire text-amber-500"></i> Trending Topics
+            </h3>
+            <div id="trending-topics-container" class="flex flex-wrap gap-1.5 pt-1"></div>
+          </div>
+
+          <div class="theme-card rounded-2xl p-4 sm:p-5 space-y-3 bg-gradient-to-b from-brand-900/20 to-transparent">
+            <h3 class="font-display font-bold text-xs sm:text-sm">Subscribe to Intelligence Digest</h3>
+            <p class="text-[11px] sm:text-xs opacity-70">Get weekly technology insights, video breakdowns, and audio digests directly to your inbox.</p>
+            <form onsubmit="app.handleNewsletter(event)" class="space-y-2">
+              <input type="email" required placeholder="Enter your email..." class="w-full theme-input text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-brand-500">
+              <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold py-2 rounded-xl transition-all shadow-md">
+                Subscribe Free
+              </button>
+            </form>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- VIEW 2: POST READER VIEW -->
+    <section id="post-detail-view" class="hidden max-w-4xl mx-auto space-y-6 sm:space-y-8">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700/50">
+        <button onclick="app.backToSearch()" class="flex items-center gap-1.5 text-xs sm:text-sm opacity-80 hover:text-brand-400 transition-colors theme-card px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Explorer</span>
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <button id="post-bookmark-btn" onclick="app.toggleBookmarkCurrent()" class="p-2 sm:p-2.5 rounded-xl theme-card text-slate-400 hover:text-amber-400 transition-colors text-xs sm:text-sm">
+            <i class="fa-solid fa-bookmark"></i>
+          </button>
+          <button onclick="app.openShareModal()" class="p-2 sm:p-2.5 rounded-xl theme-card text-slate-400 hover:text-brand-400 transition-colors text-xs sm:text-sm">
+            <i class="fa-solid fa-share-nodes"></i>
+          </button>
+        </div>
+      </div>
+
+      <header class="space-y-3 sm:space-y-4">
+        <div class="flex items-center gap-2 sm:gap-3 flex-wrap text-[11px] sm:text-xs">
+          <span id="post-category-badge" class="px-2.5 py-0.5 rounded-full font-semibold bg-brand-900/60 text-brand-300 border border-brand-700/50">
+            Category
+          </span>
+          <span class="opacity-70 flex items-center gap-1">
+            <i class="fa-regular fa-clock"></i> <span id="post-read-time">5 min read</span>
+          </span>
+          <span class="opacity-70 flex items-center gap-1">
+            <i class="fa-regular fa-calendar"></i> <span id="post-date">Sep 26, 2026</span>
+          </span>
+        </div>
+
+        <h1 id="post-title" class="text-2xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight leading-tight">
+          Blog Title Placeholder
+        </h1>
+
+        <div class="flex items-center space-x-3 sm:space-x-4 pt-1 pb-3 border-b border-slate-700/50">
+          <img id="post-author-avatar" class="w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-brand-500/50 object-cover" src="" alt="Author">
+          <div>
+            <h4 id="post-author-name" class="font-bold text-xs sm:text-sm">Author Name</h4>
+            <p id="post-author-role" class="text-[10px] sm:text-xs opacity-70">Senior Research Fellow & Writer</p>
+          </div>
+        </div>
+      </header>
+
+      <div id="post-media-hero" class="rounded-xl sm:rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl relative bg-slate-900 w-full"></div>
+
+      <article id="post-body-content" class="prose dark:prose-invert max-w-none space-y-4 sm:space-y-6 opacity-90 leading-relaxed font-sans text-sm sm:text-base md:text-lg">
+      </article>
+
+      <div class="py-4 sm:py-6 border-y border-slate-700/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <button id="post-like-btn" onclick="app.likeCurrentPost()" class="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl theme-card hover:text-red-400 transition-all font-medium text-xs sm:text-sm">
+            <i class="fa-solid fa-heart text-red-500"></i>
+            <span id="post-likes-count">0</span> Likes
+          </button>
+          
+          <button onclick="app.scrollToComments()" class="flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl theme-card hover:text-brand-400 transition-all font-medium text-xs sm:text-sm">
+            <i class="fa-regular fa-comment"></i>
+            <span id="post-comments-count">0</span> Comments
+          </button>
+        </div>
+
+        <button onclick="app.openShareModal()" class="flex items-center gap-1.5 text-xs sm:text-sm opacity-80 hover:opacity-100">
+          <i class="fa-solid fa-share-nodes"></i> Share Article
+        </button>
+      </div>
+
+      <!-- Comments Section -->
+      <section id="comments-section" class="space-y-4 sm:space-y-6 pt-2">
+        <h3 class="text-lg sm:text-xl font-display font-bold flex items-center gap-2">
+          <i class="fa-regular fa-comments text-brand-400"></i> Discussion & Insights (<span id="comments-total-badge">0</span>)
+        </h3>
+
+        <div class="theme-card rounded-2xl p-3.5 sm:p-4 space-y-3">
+          <textarea id="comment-input" rows="3" placeholder="Share your thoughts on this article..." class="w-full theme-input rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-brand-500 resize-none"></textarea>
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <span class="text-[11px] opacity-60">Stored securely in Supabase.</span>
+            <button onclick="app.submitComment()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-md self-end sm:self-auto">
+              Post Comment
+            </button>
+          </div>
+        </div>
+
+        <div id="comments-list" class="space-y-3 sm:space-y-4"></div>
+      </section>
+
+    </section>
+
+    <!-- VIEW 3: ADMIN DASHBOARD -->
+    <section id="admin-dashboard-view" class="hidden max-w-5xl mx-auto space-y-6 sm:space-y-8">
+      
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-700/50 gap-3">
+        <div>
+          <h2 class="text-xl sm:text-3xl font-display font-extrabold flex items-center gap-2.5">
+            <i class="fa-solid fa-user-shield text-brand-500"></i> Admin Management
+          </h2>
+          <p class="text-[11px] sm:text-xs opacity-70 mt-1">Logged in as Administrator (Full Database Control)</p>
+        </div>
+        <button onclick="app.logoutAdmin()" class="bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 self-start sm:self-auto">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-2 border-b border-slate-700/50 pb-2 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
+        <button onclick="app.switchAdminTab('create-post')" id="admin-tab-btn-create-post" class="admin-tab-btn bg-brand-600 text-white px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap">
+          <i class="fa-solid fa-plus mr-1"></i> Create Post
+        </button>
+        <button onclick="app.switchAdminTab('manage-posts')" id="admin-tab-btn-manage-posts" class="admin-tab-btn theme-card opacity-70 hover:opacity-100 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap">
+          <i class="fa-solid fa-list-check mr-1"></i> Manage Posts (<span id="admin-posts-count">0</span>)
+        </button>
+        <button onclick="app.switchAdminTab('branding')" id="admin-tab-btn-branding" class="admin-tab-btn theme-card opacity-70 hover:opacity-100 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap">
+          <i class="fa-solid fa-sliders mr-1"></i> Branding & Logo
+        </button>
+        <button onclick="app.switchAdminTab('topics')" id="admin-tab-btn-topics" class="admin-tab-btn theme-card opacity-70 hover:opacity-100 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap">
+          <i class="fa-solid fa-tags mr-1"></i> Categories
+        </button>
+      </div>
+
+      <!-- CREATE POST FORM -->
+      <div id="admin-tab-create-post" class="admin-tab-content theme-card rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <h3 class="text-base sm:text-lg font-bold flex items-center gap-2 border-b border-slate-700/50 pb-3">
+          <i class="fa-solid fa-pen-nib text-brand-400"></i> Publish New Content to Supabase
+        </h3>
+
+        <form onsubmit="app.handleCreatePostSubmit(event)" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Post Title</label>
+              <input type="text" id="admin-post-title" required placeholder="e.g. Next-Gen Web Engines in 2026" class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Category</label>
+              <select id="admin-post-category" required class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500"></select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Media Format</label>
+              <select id="admin-post-media-type" class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+                <option value="image">Photo / Banner Article</option>
+                <option value="video">HTML5 Video Tutorial</option>
+                <option value="audio">Audio Podcast / Sound</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Cover Image / Media URL</label>
+              <input type="url" id="admin-post-media-url" required placeholder="https://images.unsplash.com/..." class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Video MP4 Link (Optional)</label>
+              <input type="url" id="admin-post-video-url" placeholder="https://commondatastorage.googleapis..." class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Author Name</label>
+              <input type="text" id="admin-post-author-name" required value="Admin Writer" class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Author Avatar URL</label>
+              <input type="url" id="admin-post-author-avatar" required value="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Read Time / Duration</label>
+              <input type="text" id="admin-post-read-time" required value="5 min read" class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Short Snippet / Excerpt</label>
+            <input type="text" id="admin-post-snippet" required placeholder="Summary of the article to show in search and feeds..." class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Tags (Comma Separated)</label>
+            <input type="text" id="admin-post-tags" placeholder="AI, WebGPU, Future, Technology" class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Full Article Body Content (HTML Supported)</label>
+            <textarea id="admin-post-content" rows="6" required placeholder="<p class='lead'>Write your blog post body content here using paragraph or heading tags...</p>" class="w-full theme-input rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-brand-500 font-mono resize-y"></textarea>
+          </div>
+
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto">
+            <i class="fa-solid fa-database"></i> Save & Publish to Supabase
+          </button>
+        </form>
+      </div>
+
+      <!-- MANAGE POSTS TABLE -->
+      <div id="admin-tab-manage-posts" class="admin-tab-content theme-card rounded-2xl p-4 sm:p-6 space-y-4 hidden">
+        <h3 class="text-base sm:text-lg font-bold border-b border-slate-700/50 pb-3">All Published Blog Posts</h3>
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+          <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+            <thead>
+              <tr class="border-b border-slate-700/50 opacity-70">
+                <th class="p-2 sm:p-3">ID</th>
+                <th class="p-2 sm:p-3">Title</th>
+                <th class="p-2 sm:p-3">Category</th>
+                <th class="p-2 sm:p-3">Media</th>
+                <th class="p-2 sm:p-3">Date</th>
+                <th class="p-2 sm:p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-manage-posts-table-body" class="divide-y divide-slate-700/40"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SITE BRANDING CONTROL -->
+      <div id="admin-tab-branding" class="admin-tab-content theme-card rounded-2xl p-4 sm:p-6 space-y-6 hidden">
+        <h3 class="text-base sm:text-lg font-bold border-b border-slate-700/50 pb-3">Site Header, Logo Image & Hero Configuration</h3>
+        <form onsubmit="app.handleUpdateBranding(event)" class="space-y-6 max-w-2xl">
+          
+          <div class="space-y-4">
+            <h4 class="text-xs sm:text-sm font-bold text-brand-400">Navbar Branding & Logo</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Site Title</label>
+                <input type="text" id="admin-site-title-input" required class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+              </div>
+
+              <div>
+                <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Site Tagline / Subtitle</label>
+                <input type="text" id="admin-site-tagline-input" required class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+              </div>
+
+              <div>
+                <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Logo Text Character (Fallback)</label>
+                <input type="text" id="admin-site-logo-char-input" maxlength="2" class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+              </div>
+
+              <div>
+                <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Logo Image URL</label>
+                <input type="url" id="admin-site-logo-url-input" placeholder="https://image-url.com/logo.png" class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+              </div>
+            </div>
+            <p class="text-[11px] opacity-60">Providing a valid Logo Image URL replaces the letter icon fallback and syncs live to Supabase.</p>
+          </div>
+
+          <hr class="border-slate-700/50">
+
+          <div class="space-y-4">
+            <h4 class="text-xs sm:text-sm font-bold text-brand-400">Home Page Hero Search Section</h4>
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Hero Main Title</label>
+              <input type="text" id="admin-hero-title-main" required class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Hero Highlight Title</label>
+              <input type="text" id="admin-hero-title-highlight" required class="w-full theme-input rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div>
+              <label class="block text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1">Hero Description / Subtitle</label>
+              <textarea id="admin-hero-subtitle" required rows="3" class="w-full theme-input rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-brand-500 resize-none"></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition-all shadow-md w-full sm:w-auto">
+            Save Branding Configuration to Supabase
+          </button>
+        </form>
+      </div>
+
+      <!-- CATEGORIES & TRENDING TOPICS CONTROL -->
+      <div id="admin-tab-topics" class="admin-tab-content theme-card rounded-2xl p-4 sm:p-6 space-y-6 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold border-b border-slate-700/50 pb-2">Manage Blog Categories</h3>
+            <form onsubmit="app.handleAddCategory(event)" class="flex gap-2">
+              <input type="text" id="new-category-input" required placeholder="New Category Name" class="flex-1 theme-input rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+              <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-3 py-2 rounded-xl">Add</button>
+            </form>
+            <ul id="admin-categories-list" class="space-y-2 text-xs"></ul>
+          </div>
+
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold border-b border-slate-700/50 pb-2">Manage Trending Hashtags</h3>
+            <form onsubmit="app.handleAddTrendingTopic(event)" class="flex gap-2">
+              <input type="text" id="new-topic-input" required placeholder="e.g. #GenerativeAI" class="flex-1 theme-input rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+              <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-3 py-2 rounded-xl">Add</button>
+            </form>
+            <div id="admin-topics-list" class="flex flex-wrap gap-2 pt-2"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL 1: ADMIN LOGIN -->
+  <div id="login-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="theme-card rounded-2xl max-w-sm w-full p-5 sm:p-6 space-y-4 shadow-2xl relative">
+      <button onclick="app.closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+      
+      <div class="text-center space-y-1">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-brand-600/20 text-brand-400 flex items-center justify-center mx-auto text-lg sm:text-xl font-bold">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 class="text-lg sm:text-xl font-bold font-display">Admin Portal Access</h3>
+        <p class="text-xs opacity-70">Enter administrator credentials to proceed.</p>
+      </div>
+
+      <div id="login-error-msg" class="hidden text-xs text-red-400 bg-red-950/50 border border-red-800 p-2.5 rounded-xl text-center">
+        Invalid Credentials or Database Error!
+      </div>
+
+      <form onsubmit="app.handleAdminLogin(event)" class="space-y-3">
+        <div>
+          <label class="block text-[10px] uppercase tracking-wider font-bold mb-1">Email</label>
+          <input type="email" id="login-email" required placeholder="admin@example.com" class="w-full theme-input text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-[10px] uppercase tracking-wider font-bold mb-1">Password</label>
+          <input type="password" id="login-password" required placeholder="•••••••••" class="w-full theme-input text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500">
+        </div>
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-md">
+          Authenticate & Login
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SHARE LINK -->
+  <div id="share-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="theme-card rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl relative">
+      <button onclick="app.closeShareModal()" class="absolute top-4 right-4 opacity-70 hover:opacity-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+      <h3 class="text-base sm:text-lg font-bold flex items-center gap-2">
+        <i class="fa-solid fa-share-nodes text-brand-400"></i> Share Post Link
+      </h3>
+      
+      <div class="flex items-center gap-2 theme-input rounded-xl p-2">
+        <input type="text" id="share-url-input" readonly class="bg-transparent text-xs opacity-80 w-full focus:outline-none font-mono px-2">
+        <button onclick="app.copyShareLink()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold transition-all min-w-max">
+          Copy Link
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Supabase Configuration Credentials
+    const DEFAULT_SUPABASE_URL = "https://vkhradivgyyvqhkdlmiu.supabase.co";
+    const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraHJhZGl2Z3l5dnFoa2RsbWl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0ODM3OTUsImV4cCI6MjEwNjA1OTc5NX0.vwndFMsMyuabz_Wt9Bw4w9TNJ7kl0RDuQ6ivqmjrIQY";
+
+    // Initial Fallback Seed Dataset
+    const INITIAL_POSTS = [
+      {
+        id: 1,
+        title: "Building High-Performance Web Apps with WebGPU in 2026",
+        slug: "building-high-performance-web-apps-webgpu",
+        category: "Tech & AI",
+        categoryId: "techai",
+        mediaType: "image",
+        mediaUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
+        videoSample: "",
+        author: {
+          name: "Alex Vance",
+          avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+          role: "Lead Web Architect"
+        },
+        date: "Sep 26, 2026",
+        readTime: "6 min read",
+        likes: 42,
+        snippet: "Discover how WebGPU unleashes hardware acceleration directly inside the browser for next-gen graphics, compute shaders, and machine learning models.",
+        tags: ["WebGPU", "JavaScript", "Performance", "Graphics"],
+        content: "<p class='text-base sm:text-lg leading-relaxed font-semibold'>WebGPU represents the most significant leap forward for browser-based graphics and parallel computation in over a decade.</p><p>By bypassing legacy driver bottlenecks, WebGPU gives frontend developers direct low-overhead access to modern GPU pipelines.</p>"
+      },
+      {
+        id: 2,
+        title: "Quantum Computing & Room-Temperature Superconductors",
+        slug: "quantum-computing-room-temp-superconductors",
+        category: "Podcasts & Audio",
+        categoryId: "podcastsaudio",
+        mediaType: "audio",
+        mediaUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80",
+        videoSample: "",
+        author: {
+          name: "Dr. Sarah Lin",
+          avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80",
+          role: "Quantum Physicist"
+        },
+        date: "Sep 24, 2026",
+        readTime: "14 min listen",
+        likes: 89,
+        snippet: "Listen to Dr. Sarah Lin discuss zero-resistance energy transmission grids and quantum coherence stability at room temperature.",
+        tags: ["Quantum", "Physics", "Podcast", "Energy"],
+        content: "<p class='text-base sm:text-lg leading-relaxed font-semibold'>In this audio episode, we dive deep into room-temperature superconductivity breakthroughs and how scalable quantum processors are transforming cryptography.</p>"
+      },
+      {
+        id: 3,
+        title: "Deep Dive: Master Micro-Interactions in UI Design",
+        slug: "master-micro-interactions-ui-design",
+        category: "Design & UX",
+        categoryId: "designux",
+        mediaType: "video",
+        mediaUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80",
+        videoSample: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        author: {
+          name: "Elena Rostova",
+          avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+          role: "Design Systems Lead"
+        },
+        date: "Sep 20, 2026",
+        readTime: "8 min video",
+        likes: 128,
+        snippet: "Watch this video walkthrough on crafting intuitive feedback loops, spring physics animations, and glassmorphic UI elements.",
+        tags: ["UI/UX", "Animation", "CSS", "Figma"],
+        content: "<p class='text-base sm:text-lg leading-relaxed font-semibold'>Micro-interactions elevate good software into delightful experiences. Watch the embedded tutorial above to learn spring dynamics and subtle haptics.</p>"
+      }
+    ];
+
+    const INITIAL_CATEGORIES = ['Tech & AI', 'Travel & Nature', 'Science & Cosmos', 'Design & UX', 'Podcasts & Audio'];
+    const INITIAL_TRENDING = ['#GenerativeAI', '#NordicTravel', '#WebGPU', '#Cosmos', '#Glassmorphism'];
+
+    class BlogEngineApp {
+      constructor() {
+        this.supabaseUrl = DEFAULT_SUPABASE_URL;
+        this.supabaseKey = DEFAULT_SUPABASE_KEY;
+        this.supabase = null;
+
+        this.posts = [...INITIAL_POSTS];
+        this.categories = [...INITIAL_CATEGORIES];
+        this.trendingTopics = [...INITIAL_TRENDING];
+        this.commentsMap = {};
+        
+        const savedBookmarks = localStorage.getItem('user_bookmarks');
+        const initialBookmarks = savedBookmarks ? new Set(JSON.parse(savedBookmarks)) : new Set([1, 2]);
+        
+        this.state = {
+          theme: 'dark',
+          viewMode: 'list',
+          activeCategory: 'all',
+          activeMediaTab: 'all',
+          searchQuery: '',
+          selectedPostId: null,
+          isAdminLoggedIn: false,
+          adminActiveTab: 'create-post',
+          siteConfig: {
+            title: 'JRT Blog',
+            tagline: 'Think & Search',
+            logoChar: 'O',
+            logoUrl: '',
+            heroTitleMain: 'Explore Knowledge',
+            heroTitleHighlight: 'In Depth',
+            heroSubtitle: 'Comprehensive search across long-form research, video tutorials, audio podcasts, and media insights.'
+          },
+          bookmarks: initialBookmarks,
+          userLiked: new Set(),
+          sortBy: 'relevance',
+          isPlayingAudio: false,
+          audioSynthCtx: null,
+          audioOscillator: null
+        };
+
+        this.init();
+      }
+
+      async init() {
+        await this.initSupabaseClient();
+        this.renderAll();
+        await this.loadAllSupabaseData();
+        this.setupScrollListener();
+      }
+
+      async initSupabaseClient() {
+        try {
+          if (window.supabase) {
+            this.supabase = window.supabase.createClient(this.supabaseUrl, this.supabaseKey);
+            
+            const { data: { session } } = await this.supabase.auth.getSession();
+            if (session) {
+              this.state.isAdminLoggedIn = true;
+            }
+          }
+        } catch (err) {
+          console.warn("Supabase initialization notice:", err);
+        }
+      }
+
+      renderAll() {
+        this.renderBranding();
+        this.renderAdminHeaderBtn();
+        this.renderCategoriesPills();
+        this.renderTrendingTopics();
+        this.updateBookmarkBadge();
+        this.renderPosts();
+      }
+
+      async loadAllSupabaseData() {
+        if (!this.supabase) return;
+
+        try {
+          const [configRes, catRes, topicRes, postsRes] = await Promise.all([
+            this.supabase.from('site_config').select('*').single(),
+            this.supabase.from('categories').select('name').order('created_at', { ascending: true }),
+            this.supabase.from('trending_topics').select('name').order('created_at', { ascending: true }),
+            this.supabase.from('posts').select('*').order('created_at', { ascending: false })
+          ]);
+
+          if (configRes.data) {
+            this.state.siteConfig = {
+              title: configRes.data.title || 'JRT Blog',
+              tagline: configRes.data.tagline || 'Think & Search',
+              logoChar: configRes.data.logo_char || 'O',
+              logoUrl: configRes.data.logo_url || '',
+              heroTitleMain: configRes.data.hero_title_main || 'Explore Knowledge',
+              heroTitleHighlight: configRes.data.hero_title_highlight || 'In Depth',
+              heroSubtitle: configRes.data.hero_subtitle || 'Comprehensive search across long-form research, video tutorials, audio podcasts, and media insights.'
+            };
+          }
+
+          if (catRes.data && catRes.data.length > 0) {
+            this.categories = catRes.data.map(c => c.name);
+          }
+
+          if (topicRes.data && topicRes.data.length > 0) {
+            this.trendingTopics = topicRes.data.map(t => t.name);
+          }
+
+          if (postsRes.data && postsRes.data.length > 0) {
+            this.posts = postsRes.data.map(p => ({
+              id: p.id,
+              title: p.title,
+              slug: p.slug,
+              category: p.category,
+              categoryId: p.category_id,
+              mediaType: p.media_type,
+              mediaUrl: p.media_url,
+              videoSample: p.video_sample,
+              author: {
+                name: p.author_name,
+                avatar: p.author_avatar,
+                role: p.author_role || 'Contributor'
+              },
+              date: p.date_str,
+              readTime: p.read_time,
+              likes: p.likes || 0,
+              snippet: p.snippet,
+              tags: p.tags || [],
+              content: p.content
+            }));
+          }
+
+          this.renderAll();
+        } catch (error) {
+          console.error("Supabase live sync notice:", error);
+        }
+      }
+
+      toggleTheme() {
+        this.state.theme = this.state.theme === 'dark' ? 'light' : 'dark';
+        const html = document.documentElement;
+        const icon = document.getElementById('theme-icon');
+
+        if (this.state.theme === 'light') {
+          html.classList.remove('dark');
+          html.classList.add('light');
+          icon.className = 'fa-solid fa-sun text-amber-500';
+          document.body.className = 'bg-slate-100 text-slate-900 font-sans transition-colors duration-300 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white';
+        } else {
+          html.classList.remove('light');
+          html.classList.add('dark');
+          icon.className = 'fa-solid fa-moon text-white';
+          document.body.className = 'bg-slate-950 text-slate-100 font-sans transition-colors duration-300 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white';
+        }
+      }
+
+      renderBranding() {
+        const title = this.state.siteConfig.title || 'OmniBlog';
+        const midPoint = Math.floor(title.length / 2);
+        const part1 = title.slice(0, midPoint || 4);
+        const part2 = title.slice(midPoint || 4);
+
+        document.getElementById('header-site-title').innerHTML = `${part1}<span class="text-brand-500">${part2}</span>`;
+        document.getElementById('header-site-tagline').innerText = this.state.siteConfig.tagline;
+        
+        const logoIconContainer = document.getElementById('brand-logo-icon');
+        if (this.state.siteConfig.logoUrl && this.state.siteConfig.logoUrl.trim() !== '') {
+            logoIconContainer.innerHTML = `<img src="${this.state.siteConfig.logoUrl}" alt="Logo" class="w-full h-full object-cover" />`;
+        } else {
+            logoIconContainer.innerHTML = this.state.siteConfig.logoChar || 'O';
+        }
+
+        document.getElementById('html-title-tag').innerText = `${title} | ${this.state.siteConfig.tagline}`;
+        document.getElementById('hero-title-main').innerText = this.state.siteConfig.heroTitleMain;
+        document.getElementById('hero-title-highlight').innerText = this.state.siteConfig.heroTitleHighlight;
+        document.getElementById('hero-subtitle').innerText = this.state.siteConfig.heroSubtitle;
+
+        // Sync inputs in admin dashboard
+        const titleInput = document.getElementById('admin-site-title-input');
+        const taglineInput = document.getElementById('admin-site-tagline-input');
+        const logoCharInput = document.getElementById('admin-site-logo-char-input');
+        const logoUrlInput = document.getElementById('admin-site-logo-url-input');
+        const heroMainInput = document.getElementById('admin-hero-title-main');
+        const heroHighlightInput = document.getElementById('admin-hero-title-highlight');
+        const heroSubtitleInput = document.getElementById('admin-hero-subtitle');
+
+        if (titleInput) titleInput.value = this.state.siteConfig.title;
+        if (taglineInput) taglineInput.value = this.state.siteConfig.tagline;
+        if (logoCharInput) logoCharInput.value = this.state.siteConfig.logoChar;
+        if (logoUrlInput) logoUrlInput.value = this.state.siteConfig.logoUrl || '';
+        if (heroMainInput) heroMainInput.value = this.state.siteConfig.heroTitleMain;
+        if (heroHighlightInput) heroHighlightInput.value = this.state.siteConfig.heroTitleHighlight;
+        if (heroSubtitleInput) heroSubtitleInput.value = this.state.siteConfig.heroSubtitle;
+      }
+
+      setViewMode(mode) {
+        this.state.viewMode = mode;
+        const icon = document.getElementById('view-mode-icon');
+        const label = document.getElementById('view-mode-label');
+        document.getElementById('view-dropdown').classList.add('hidden');
+
+        if (mode === 'list') {
+          icon.className = 'fa-solid fa-list';
+          label.innerText = 'List View';
+        } else if (mode === 'grid') {
+          icon.className = 'fa-solid fa-grip';
+          label.innerText = 'Grid Cards';
+        } else if (mode === 'media') {
+          icon.className = 'fa-solid fa-photo-film';
+          label.innerText = 'Media Wall';
+        }
+        this.renderPosts();
+      }
+
+      toggleViewDropdown() {
+        document.getElementById('view-dropdown').classList.toggle('hidden');
+      }
+
+      handleSearchInput(query) {
+        this.state.searchQuery = query;
+        const heroClear = document.getElementById('hero-clear-btn');
+        const headerClear = document.getElementById('header-clear-btn');
+        
+        if (query.trim().length > 0) {
+          heroClear?.classList.remove('hidden');
+          headerClear?.classList.remove('hidden');
+          this.showAutocomplete(query);
+        } else {
+          heroClear?.classList.add('hidden');
+          headerClear?.classList.add('hidden');
+          this.hideAutocomplete();
+        }
+
+        const heroInput = document.getElementById('hero-search-input');
+        const headerInput = document.getElementById('header-search-input');
+        if (heroInput && heroInput.value !== query) heroInput.value = query;
+        if (headerInput && headerInput.value !== query) headerInput.value = query;
+
+        this.renderPosts();
+      }
+
+      executeSearch() {
+        this.hideAutocomplete();
+        this.renderPosts();
+      }
+
+      clearSearch() {
+        this.state.searchQuery = '';
+        const heroInput = document.getElementById('hero-search-input');
+        const headerInput = document.getElementById('header-search-input');
+        if (heroInput) heroInput.value = '';
+        if (headerInput) headerInput.value = '';
+        document.getElementById('hero-clear-btn')?.classList.add('hidden');
+        document.getElementById('header-clear-btn')?.classList.add('hidden');
+        this.hideAutocomplete();
+        this.renderPosts();
+      }
+
+      quickSearch(term) {
+        this.handleSearchInput(term);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      showAutocomplete(query) {
+        const dropdown = document.getElementById('autocomplete-dropdown');
+        const q = query.toLowerCase();
+        const matches = this.posts.filter(p => 
+          p.title.toLowerCase().includes(q) || 
+          p.category.toLowerCase().includes(q) ||
+          p.tags.some(t => t.toLowerCase().includes(q))
+        ).slice(0, 4);
+
+        if (matches.length === 0) {
+          dropdown.classList.add('hidden');
+          return;
+        }
+
+        dropdown.innerHTML = matches.map(m => `
+          <div onclick="app.openPost(${m.id}); app.hideAutocomplete();" class="p-3 hover:bg-brand-600 hover:text-white cursor-pointer transition-colors flex items-center justify-between group">
+            <div class="flex items-center space-x-2.5">
+              <i class="fa-solid fa-magnifying-glass text-xs opacity-60"></i>
+              <span class="text-xs font-medium">${this.highlightMatch(m.title, query)}</span>
+            </div>
+            <span class="text-[9px] theme-input px-2 py-0.5 rounded">${m.category}</span>
+          </div>
+        `).join('');
+
+        dropdown.classList.remove('hidden');
+      }
+
+      hideAutocomplete() {
+        document.getElementById('autocomplete-dropdown')?.classList.add('hidden');
+      }
+
+      renderCategoriesPills() {
+        const container = document.getElementById('category-pills-bar');
+        const adminCategorySelect = document.getElementById('admin-post-category');
+
+        let pillsHtml = `
+          <span class="text-xs font-semibold opacity-60 uppercase tracking-wider mr-1 hidden md:inline">Topics:</span>
+          <button onclick="app.filterByCategory('all')" id="cat-pill-all" class="cat-pill px-3 py-1 rounded-full text-xs font-medium bg-brand-600 text-white transition-all whitespace-nowrap shrink-0">
+            All Categories
+          </button>
+        `;
+
+        let selectOptionsHtml = '';
+
+        this.categories.forEach(cat => {
+          const catId = cat.replace(/[^a-zA-Z]/g, '').toLowerCase();
+          pillsHtml += `
+            <button onclick="app.filterByCategory('${cat}')" id="cat-pill-${catId}" class="cat-pill px-3 py-1 rounded-full text-xs font-medium theme-input hover:border-brand-500 transition-all whitespace-nowrap shrink-0">
+              ${cat}
+            </button>
+          `;
+          selectOptionsHtml += `<option value="${cat}">${cat}</option>`;
+        });
+
+        container.innerHTML = pillsHtml;
+        if (adminCategorySelect) adminCategorySelect.innerHTML = selectOptionsHtml;
+      }
+
+      filterByCategory(category) {
+        this.state.activeCategory = category;
+        document.querySelectorAll('.cat-pill').forEach(btn => {
+          btn.className = 'cat-pill px-3 py-1 rounded-full text-xs font-medium theme-input hover:border-brand-500 transition-all whitespace-nowrap shrink-0';
+        });
+
+        const catId = category === 'all' ? 'all' : category.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        const activeBtn = document.getElementById(`cat-pill-${catId}`);
+        if (activeBtn) {
+          activeBtn.className = 'cat-pill px-3 py-1 rounded-full text-xs font-medium bg-brand-600 text-white transition-all shadow-sm whitespace-nowrap shrink-0';
+        }
+
+        this.renderPosts();
+      }
+
+      renderTrendingTopics() {
+        const container = document.getElementById('trending-topics-container');
+        container.innerHTML = this.trendingTopics.map(topic => `
+          <button onclick="app.quickSearch('${topic.replace('#', '')}')" class="theme-input hover:border-brand-500 text-[11px] sm:text-xs px-2.5 py-1 rounded-lg transition-all">
+            ${topic}
+          </button>
+        `).join('');
+      }
+
+      filterByMedia(media) {
+        this.state.activeMediaTab = media;
+        document.querySelectorAll('.media-tab-btn').forEach(btn => {
+          btn.className = 'media-tab-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border-b-2 border-transparent opacity-70 hover:opacity-100 flex items-center gap-1.5';
+        });
+
+        const activeBtn = document.getElementById(`media-tab-${media}`);
+        if (activeBtn) {
+          activeBtn.className = 'media-tab-btn px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border-b-2 border-brand-500 text-brand-400 flex items-center gap-1.5';
+        }
+
+        this.renderPosts();
+      }
+
+      handleSortChange(sortVal) {
+        this.state.sortBy = sortVal;
+        this.renderPosts();
+      }
+
+      resetAllFilters() {
+        this.state.activeCategory = 'all';
+        this.state.activeMediaTab = 'all';
+        this.state.searchQuery = '';
+        this.filterByCategory('all');
+        this.filterByMedia('all');
+        this.clearSearch();
+      }
+
+      getFilteredPosts() {
+        let results = [...this.posts];
+
+        if (this.state.searchQuery.trim().length > 0) {
+          const q = this.state.searchQuery.toLowerCase();
+          results = results.filter(p => 
+            p.title.toLowerCase().includes(q) ||
+            p.snippet.toLowerCase().includes(q) ||
+            p.author.name.toLowerCase().includes(q) ||
+            p.tags.some(t => t.toLowerCase().includes(q))
+          );
+        }
+
+        if (this.state.activeCategory !== 'all') {
+          results = results.filter(p => p.category === this.state.activeCategory);
+        }
+
+        if (this.state.activeMediaTab === 'articles' || this.state.activeMediaTab === 'photos') {
+          results = results.filter(p => p.mediaType === 'image');
+        } else if (this.state.activeMediaTab === 'videos') {
+          results = results.filter(p => p.mediaType === 'video');
+        } else if (this.state.activeMediaTab === 'podcasts') {
+          results = results.filter(p => p.mediaType === 'audio');
+        } else if (this.state.activeMediaTab === 'bookmarks') {
+          results = results.filter(p => this.state.bookmarks.has(p.id));
+        }
+
+        if (this.state.sortBy === 'latest') {
+          results.sort((a, b) => b.id - a.id);
+        } else if (this.state.sortBy === 'likes') {
+          results.sort((a, b) => b.likes - a.likes);
+        }
+
+        return results;
+      }
+
+      renderPosts() {
+        const container = document.getElementById('posts-container');
+        const emptyState = document.getElementById('empty-state');
+        const resultsCount = document.getElementById('results-count');
+        const searchBanner = document.getElementById('search-meta-banner');
+        const activeTerm = document.getElementById('active-search-term');
+
+        const filtered = this.getFilteredPosts();
+        resultsCount.innerText = filtered.length;
+
+        if (this.state.searchQuery.trim().length > 0) {
+          searchBanner.classList.remove('hidden');
+          activeTerm.innerText = `"${this.state.searchQuery}"`;
+        } else {
+          searchBanner.classList.add('hidden');
+        }
+
+        if (filtered.length === 0) {
+          container.innerHTML = '';
+          emptyState.classList.remove('hidden');
+          return;
+        } else {
+          emptyState.classList.add('hidden');
+        }
+
+        if (this.state.viewMode === 'list') {
+          container.className = 'space-y-4 sm:space-y-6';
+          container.innerHTML = filtered.map(p => this.renderListCard(p)).join('');
+        } else if (this.state.viewMode === 'grid') {
+          container.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6';
+          container.innerHTML = filtered.map(p => this.renderGridCard(p)).join('');
+        } else if (this.state.viewMode === 'media') {
+          container.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6';
+          container.innerHTML = filtered.map(p => this.renderMediaCard(p)).join('');
+        }
+      }
+
+      renderListCard(post) {
+        const isBookmarked = this.state.bookmarks.has(post.id);
+        const isLiked = this.state.userLiked.has(post.id);
+
+        let mediaThumbnail = '';
+        if (post.mediaType === 'video') {
+          mediaThumbnail = `
+            <div class="relative w-full sm:w-52 md:w-60 h-44 sm:h-40 rounded-xl overflow-hidden group bg-slate-900 border border-slate-700/50 shrink-0 cursor-pointer" onclick="app.openPost(${post.id})">
+              <img src="${post.mediaUrl}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+              <div class="absolute inset-0 bg-slate-950/40 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-full bg-brand-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-play text-xs ml-0.5"></i>
+                </div>
+              </div>
+              <span class="absolute bottom-2 right-2 bg-slate-950/80 text-white text-[9px] font-mono px-2 py-0.5 rounded">VIDEO</span>
+            </div>
+          `;
+        } else if (post.mediaType === 'audio') {
+          mediaThumbnail = `
+            <div class="relative w-full sm:w-52 md:w-60 h-40 rounded-xl overflow-hidden group bg-gradient-to-br from-indigo-900/80 to-purple-900/80 border border-indigo-500/30 shrink-0 p-3.5 flex flex-col justify-between cursor-pointer" onclick="app.openPost(${post.id})">
+              <div class="flex justify-between items-center">
+                <span class="text-[9px] font-bold bg-purple-500/30 text-purple-200 border border-purple-400/30 px-2 py-0.5 rounded-full">AUDIO PODCAST</span>
+                <i class="fa-solid fa-podcast text-purple-400 text-base"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-1 text-slate-300">
+                  <div class="w-1 bg-purple-400 h-3 animate-pulse"></div>
+                  <div class="w-1 bg-purple-400 h-5 animate-pulse"></div>
+                  <div class="w-1 bg-purple-400 h-2 animate-pulse"></div>
+                  <div class="w-1 bg-purple-400 h-6 animate-pulse"></div>
+                </div>
+                <p class="text-[11px] text-purple-200 font-medium">Interactive Sound</p>
+              </div>
+            </div>
+          `;
+        } else {
+          mediaThumbnail = `
+            <div class="relative w-full sm:w-52 md:w-60 h-44 sm:h-40 rounded-xl overflow-hidden group bg-slate-900 border border-slate-700/50 shrink-0 cursor-pointer" onclick="app.openPost(${post.id})">
+              <img src="${post.mediaUrl}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            </div>
+          `;
+        }
+
+        return `
+          <div class="theme-card rounded-2xl p-4 sm:p-5 hover:border-brand-500 transition-all duration-300 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start">
+            ${mediaThumbnail}
+            
+            <div class="flex-1 space-y-2 w-full">
+              <div class="flex items-center space-x-2 text-[11px] sm:text-xs opacity-70 flex-wrap">
+                <img src="${post.author.avatar}" alt="${post.author.name}" class="w-4 h-4 rounded-full object-cover">
+                <span class="font-medium">${post.author.name}</span>
+                <span>&bull;</span>
+                <span class="text-brand-400 font-mono">${post.category}</span>
+                <span>&bull;</span>
+                <span>${post.date}</span>
+              </div>
+
+              <h3 onclick="app.openPost(${post.id})" class="text-base sm:text-lg md:text-xl font-display font-bold hover:text-brand-400 transition-colors cursor-pointer leading-snug">
+                ${this.highlightMatch(post.title, this.state.searchQuery)}
+              </h3>
+
+              <p class="text-xs sm:text-sm opacity-80 line-clamp-2 leading-relaxed">
+                ${this.highlightMatch(post.snippet, this.state.searchQuery)}
+              </p>
+
+              <div class="pt-2 flex items-center justify-between text-xs opacity-80 w-full">
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                  <span class="flex items-center gap-1 theme-input px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md text-[11px]">
+                    <i class="fa-regular fa-clock text-[10px]"></i> ${post.readTime}
+                  </span>
+                  
+                  <button onclick="app.toggleLike(${post.id})" class="flex items-center gap-1 hover:text-red-400 transition-colors ${isLiked ? 'text-red-400' : ''}">
+                    <i class="fa-solid fa-heart ${isLiked ? 'text-red-500' : ''}"></i>
+                    <span>${post.likes}</span>
+                  </button>
+                </div>
+
+                <div class="flex items-center space-x-1 sm:space-x-2">
+                  <button onclick="app.toggleBookmark(${post.id})" class="p-1.5 rounded-lg hover:bg-slate-700/50 ${isBookmarked ? 'text-amber-400' : 'hover:text-amber-400'}" title="Bookmark">
+                    <i class="fa-solid fa-bookmark"></i>
+                  </button>
+                  <button onclick="app.openShareModalForPost(${post.id})" class="p-1.5 rounded-lg hover:bg-slate-700/50 hover:text-brand-400" title="Share">
+                    <i class="fa-solid fa-share-nodes"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        `;
+      }
+
+      renderGridCard(post) {
+        const isBookmarked = this.state.bookmarks.has(post.id);
+
+        return `
+          <div class="theme-card rounded-2xl overflow-hidden hover:border-brand-500 transition-all duration-300 flex flex-col justify-between group">
+            <div>
+              <div class="relative h-40 sm:h-48 overflow-hidden bg-slate-900 cursor-pointer" onclick="app.openPost(${post.id})">
+                <img src="${post.mediaUrl}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <span class="absolute top-2.5 left-2.5 bg-slate-950/80 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-slate-700">
+                  ${post.category}
+                </span>
+              </div>
+              <div class="p-4 sm:p-5 space-y-2.5">
+                <div class="flex items-center gap-1.5 text-[11px] opacity-70">
+                  <img src="${post.author.avatar}" class="w-4 h-4 rounded-full object-cover">
+                  <span>${post.author.name}</span>
+                  <span>&bull;</span>
+                  <span>${post.date}</span>
+                </div>
+                <h3 onclick="app.openPost(${post.id})" class="font-display font-bold text-base sm:text-lg hover:text-brand-400 transition-colors cursor-pointer line-clamp-2 leading-snug">
+                  ${post.title}
+                </h3>
+                <p class="text-xs opacity-70 line-clamp-2">${post.snippet}</p>
+              </div>
+            </div>
+            
+            <div class="px-4 pb-4 sm:px-5 sm:pb-5 pt-2 flex items-center justify-between border-t border-slate-700/40 text-xs opacity-80">
+              <span class="text-[11px]">${post.readTime}</span>
+              <div class="flex items-center space-x-3">
+                <button onclick="app.toggleLike(${post.id})" class="hover:text-red-400 flex items-center gap-1">
+                  <i class="fa-solid fa-heart text-red-500"></i> ${post.likes}
+                </button>
+                <button onclick="app.toggleBookmark(${post.id})" class="${isBookmarked ? 'text-amber-400' : 'hover:text-amber-400'}">
+                  <i class="fa-solid fa-bookmark"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      renderMediaCard(post) {
+        return `
+          <div class="theme-card rounded-2xl overflow-hidden relative group h-60 sm:h-72 cursor-pointer" onclick="app.openPost(${post.id})">
+            <img src="${post.mediaUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent p-4 flex flex-col justify-end space-y-1.5 text-white">
+              <span class="text-[9px] uppercase tracking-wider font-bold text-brand-400 bg-brand-950/90 w-max px-2 py-0.5 rounded border border-brand-800">
+                ${post.mediaType}
+              </span>
+              <h4 class="font-display font-bold text-sm sm:text-base line-clamp-2 group-hover:text-brand-300 transition-colors">
+                ${post.title}
+              </h4>
+              <p class="text-[11px] text-slate-300">${post.author.name} &bull; ${post.date}</p>
+            </div>
+          </div>
+        `;
+      }
+
+      highlightMatch(text, query) {
+        if (!query || query.trim() === '') return text;
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<span class="highlight-match">$1</span>');
+      }
+
+      async openPost(id) {
+        const post = this.posts.find(p => p.id === id);
+        if (!post) return;
+
+        this.state.selectedPostId = id;
+
+        document.getElementById('search-view-container').classList.add('hidden');
+        document.getElementById('admin-dashboard-view').classList.add('hidden');
+        document.getElementById('post-detail-view').classList.remove('hidden');
+        document.getElementById('progress-container').classList.remove('hidden');
+
+        document.getElementById('post-category-badge').innerText = post.category;
+        document.getElementById('post-read-time').innerText = post.readTime;
+        document.getElementById('post-date').innerText = post.date;
+        document.getElementById('post-title').innerText = post.title;
+        document.getElementById('post-author-avatar').src = post.author.avatar;
+        document.getElementById('post-author-name').innerText = post.author.name;
+        document.getElementById('post-author-role').innerText = post.author.role;
+        document.getElementById('post-likes-count').innerText = post.likes;
+
+        const mediaHero = document.getElementById('post-media-hero');
+        if (post.mediaType === 'video') {
+          mediaHero.innerHTML = `
+            <video controls autoplay loop class="w-full max-h-[260px] sm:max-h-[380px] md:max-h-[480px] object-cover">
+              <source src="${post.videoSample || post.mediaUrl}" type="video/mp4">
+              Your browser does not support HTML5 video playback.
+            </video>
+          `;
+        } else if (post.mediaType === 'audio') {
+          mediaHero.innerHTML = `
+            <div class="p-4 sm:p-8 bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 text-white flex flex-col md:flex-row items-center gap-4 sm:gap-6 w-full">
+              <div class="w-20 h-20 sm:w-32 sm:h-32 rounded-2xl bg-brand-600/30 border border-brand-500/40 flex items-center justify-center shrink-0 text-brand-400 text-2xl sm:text-4xl shadow-lg">
+                <i class="fa-solid fa-podcast"></i>
+              </div>
+              <div class="flex-1 space-y-2.5 text-center md:text-left w-full">
+                <span class="text-[10px] uppercase tracking-widest text-purple-400 font-bold">Interactive Audio Episode</span>
+                <h3 class="text-base sm:text-xl font-bold">${post.title}</h3>
+                
+                <div class="bg-slate-900/80 p-3 sm:p-4 rounded-xl border border-slate-700/60 space-y-2.5 w-full">
+                  <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                    <span id="full-audio-timer">00:00</span>
+                    <span>14:00</span>
+                  </div>
+                  <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden cursor-pointer" onclick="app.seekAudio(event)">
+                    <div id="full-audio-bar" class="bg-gradient-to-r from-brand-500 to-purple-500 h-full w-0"></div>
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between pt-1 gap-2">
+                    <button onclick="app.toggleSidebarAudio()" id="full-play-btn" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-md">
+                      <i class="fa-solid fa-play"></i> Play Interactive Sound
+                    </button>
+                    <span class="text-xs text-slate-400 hidden sm:inline"><i class="fa-solid fa-volume-high"></i> Stereo Audio</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          mediaHero.innerHTML = `
+            <img src="${post.mediaUrl}" alt="${post.title}" class="w-full max-h-[260px] sm:max-h-[380px] md:max-h-[480px] object-cover">
+          `;
+        }
+
+        document.getElementById('post-body-content').innerHTML = post.content;
+        this.updatePostViewActions();
+        await this.loadAndRenderComments(id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      openFeaturedAudioPost() {
+        const audioPost = this.posts.find(p => p.mediaType === 'audio') || this.posts[0];
+        if (audioPost) this.openPost(audioPost.id);
+      }
+
+      backToSearch() {
+        this.state.selectedPostId = null;
+        document.getElementById('post-detail-view').classList.add('hidden');
+        document.getElementById('admin-dashboard-view').classList.add('hidden');
+        document.getElementById('progress-container').classList.add('hidden');
+        document.getElementById('search-view-container').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      resetToHome() {
+        this.resetAllFilters();
+        this.backToSearch();
+      }
+
+      async loadAndRenderComments(postId) {
+        const container = document.getElementById('comments-list');
+        
+        if (this.supabase) {
+          const { data, error } = await this.supabase
+            .from('comments')
+            .select('*')
+            .eq('post_id', postId)
+            .order('created_at', { ascending: false });
+
+          if (!error && data) {
+            this.commentsMap[postId] = data.map(c => ({
+              id: c.id,
+              name: c.author_name,
+              text: c.comment_text,
+              date: new Date(c.created_at).toLocaleDateString()
+            }));
+          }
+        }
+
+        const comments = this.commentsMap[postId] || [];
+        document.getElementById('comments-total-badge').innerText = comments.length;
+        document.getElementById('post-comments-count').innerText = comments.length;
+
+        if (comments.length === 0) {
+          container.innerHTML = `<p class="text-xs opacity-60 italic py-2">No comments posted yet. Be the first to share feedback!</p>`;
+          return;
+        }
+
+        container.innerHTML = comments.map(c => `
+          <div class="theme-card rounded-xl p-3.5 space-y-1 relative group">
+            <div class="flex items-center justify-between text-xs pr-16 mb-1">
+              <span class="font-bold text-xs">${c.name}</span>
+              <span class="opacity-60 text-[10px]">${c.date}</span>
+            </div>
+            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">${c.text}</p>
+            ${this.state.isAdminLoggedIn ? `<button onclick="app.deleteComment(${c.id},${postId})" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-[10px] sm:text-xs opacity-80 hover:opacity-100 bg-red-950/30 px-2 py-1 rounded transition-all"><i class="fa-solid fa-trash"></i> Delete</button>` : ''}
+          </div>
+        `).join('');
+      }
+
+      async deleteComment(commentId, postId) {
+        if (!confirm("Are you sure you want to delete this comment?")) return;
+        
+        if (this.supabase) {
+          const { error } = await this.supabase.from('comments').delete().eq('id', commentId);
+          if (error) {
+            alert("Error deleting comment: " + error.message);
+            return;
+          }
+        }
+
+        if (this.commentsMap[postId]) {
+          this.commentsMap[postId] = this.commentsMap[postId].filter(c => c.id !== commentId);
+        }
+        
+        await this.loadAndRenderComments(postId);
+      }
+
+      async submitComment() {
+        const postId = this.state.selectedPostId;
+        if (!postId) return;
+
+        const input = document.getElementById('comment-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const authorName = this.state.isAdminLoggedIn ? "Administrator" : "Guest Reader";
+
+        if (this.supabase) {
+          await this.supabase.from('comments').insert({
+            post_id: postId,
+            author_name: authorName,
+            comment_text: text
+          });
+        }
+
+        if (!this.commentsMap[postId]) this.commentsMap[postId] = [];
+        this.commentsMap[postId].unshift({
+          id: Date.now(),
+          name: authorName,
+          text: text,
+          date: "Just now"
+        });
+
+        input.value = '';
+        await this.loadAndRenderComments(postId);
+      }
+
+      scrollToComments() {
+        document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      async toggleLike(postId) {
+        const post = this.posts.find(p => p.id === postId);
+        if (!post) return;
+
+        if (this.state.userLiked.has(postId)) {
+          this.state.userLiked.delete(postId);
+          post.likes = Math.max(0, post.likes - 1);
+        } else {
+          this.state.userLiked.add(postId);
+          post.likes += 1;
+        }
+
+        if (this.supabase) {
+          await this.supabase.from('posts').update({ likes: post.likes }).eq('id', postId);
+        }
+
+        this.renderPosts();
+        if (this.state.selectedPostId === postId) {
+          this.updatePostViewActions();
+        }
+      }
+
+      likeCurrentPost() {
+        if (!this.state.selectedPostId) return;
+        this.toggleLike(this.state.selectedPostId);
+      }
+
+      toggleBookmark(postId) {
+        if (this.state.bookmarks.has(postId)) {
+          this.state.bookmarks.delete(postId);
+        } else {
+          this.state.bookmarks.add(postId);
+        }
+        
+        localStorage.setItem('user_bookmarks', JSON.stringify([...this.state.bookmarks]));
+        
+        this.updateBookmarkBadge();
+        this.renderPosts();
+
+        if (this.state.selectedPostId === postId) {
+          this.updatePostViewActions();
+        }
+      }
+
+      toggleBookmarkCurrent() {
+        if (!this.state.selectedPostId) return;
+        this.toggleBookmark(this.state.selectedPostId);
+      }
+
+      updateBookmarkBadge() {
+        const badge = document.getElementById('bookmark-count-badge');
+        if (badge) badge.innerText = this.state.bookmarks.size;
+      }
+
+      updatePostViewActions() {
+        const id = this.state.selectedPostId;
+        if (!id) return;
+
+        const post = this.posts.find(p => p.id === id);
+        if (!post) return;
+
+        const isBookmarked = this.state.bookmarks.has(id);
+        const isLiked = this.state.userLiked.has(id);
+
+        const bookmarkBtn = document.getElementById('post-bookmark-btn');
+        if (bookmarkBtn) {
+          bookmarkBtn.className = `p-2 sm:p-2.5 rounded-xl theme-card ${isBookmarked ? 'text-amber-400 border-amber-500' : 'text-slate-400 hover:text-amber-400'} transition-colors text-xs sm:text-sm`;
+        }
+
+        const likesBadge = document.getElementById('post-likes-count');
+        if (likesBadge) likesBadge.innerText = post.likes;
+
+        const likeBtn = document.getElementById('post-like-btn');
+        if (likeBtn) {
+          likeBtn.className = `flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl theme-card ${isLiked ? 'text-red-400 border-red-500' : 'hover:text-red-400'} transition-all font-medium text-xs sm:text-sm`;
+        }
+      }
+
+      toggleSidebarAudio() {
+        if (this.state.isPlayingAudio) {
+          this.stopAudio();
+        } else {
+          this.startSynthAudio();
+        }
+      }
+
+      startSynthAudio() {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+
+          this.state.audioSynthCtx = new AudioContext();
+          const osc = this.state.audioSynthCtx.createOscillator();
+          const gain = this.state.audioSynthCtx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(220, this.state.audioSynthCtx.currentTime);
+          gain.gain.setValueAtTime(0.08, this.state.audioSynthCtx.currentTime);
+
+          osc.connect(gain);
+          gain.connect(this.state.audioSynthCtx.destination);
+          osc.start();
+
+          this.state.audioOscillator = osc;
+          this.state.isPlayingAudio = true;
+          this.updateAudioBtns(true);
+
+          let progress = 0;
+          this.audioInterval = setInterval(() => {
+            progress += 1;
+            if (progress > 100) progress = 0;
+            const miniBar = document.getElementById('mini-audio-bar');
+            const fullBar = document.getElementById('full-audio-bar');
+            if (miniBar) miniBar.style.width = `${progress}%`;
+            if (fullBar) fullBar.style.width = `${progress}%`;
+          }, 500);
+
+        } catch (e) {
+          console.log('Audio notice:', e);
+        }
+      }
+
+      stopAudio() {
+        if (this.state.audioOscillator) {
+          this.state.audioOscillator.stop();
+          this.state.audioOscillator.disconnect();
+        }
+        if (this.state.audioSynthCtx) {
+          this.state.audioSynthCtx.close();
+        }
+        this.state.isPlayingAudio = false;
+        clearInterval(this.audioInterval);
+        this.updateAudioBtns(false);
+      }
+
+      updateAudioBtns(isPlaying) {
+        const miniBtn = document.getElementById('mini-play-btn');
+        const fullBtn = document.getElementById('full-play-btn');
+
+        if (miniBtn) miniBtn.innerHTML = isPlaying ? `<i class="fa-solid fa-pause"></i>` : `<i class="fa-solid fa-play"></i>`;
+        if (fullBtn) fullBtn.innerHTML = isPlaying ? `<i class="fa-solid fa-pause"></i> Pause Audio` : `<i class="fa-solid fa-play"></i> Play Interactive Sound`;
+      }
+
+      seekAudio(e) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percentage = (clickX / rect.width) * 100;
+
+        const miniBar = document.getElementById('mini-audio-bar');
+        const fullBar = document.getElementById('full-audio-bar');
+        if (miniBar) miniBar.style.width = `${percentage}%`;
+        if (fullBar) fullBar.style.width = `${percentage}%`;
+      }
+
+      renderAdminHeaderBtn() {
+        const container = document.getElementById('admin-auth-header-btn');
+        if (!container) return;
+
+        if (this.state.isAdminLoggedIn) {
+          container.innerHTML = `
+            <button onclick="app.openAdminDashboard()" class="bg-brand-600 hover:bg-brand-500 text-white text-[11px] sm:text-xs font-bold px-2.5 py-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-md">
+              <i class="fa-solid fa-user-shield text-xs"></i> <span class="hidden sm:inline">Admin Portal</span>
+            </button>
+          `;
+        } else {
+          container.innerHTML = `
+            <button onclick="app.openLoginModal()" class="theme-input hover:border-brand-500 text-[11px] sm:text-xs font-semibold px-2.5 py-1.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 opacity-90 hover:opacity-100">
+              <i class="fa-solid fa-lock text-brand-400 text-xs"></i> <span class="hidden sm:inline">Admin Login</span>
+            </button>
+          `;
+        }
+      }
+
+      openLoginModal() {
+        document.getElementById('login-modal').classList.remove('hidden');
+        document.getElementById('login-error-msg').classList.add('hidden');
+      }
+
+      closeLoginModal() {
+        document.getElementById('login-modal').classList.add('hidden');
+      }
+
+      async handleAdminLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-password').value;
+
+        if (!this.supabase) {
+          document.getElementById('login-error-msg').innerText = "Supabase client connection required.";
+          document.getElementById('login-error-msg').classList.remove('hidden');
+          return;
+        }
+
+        const { data, error } = await this.supabase.auth.signInWithPassword({
+          email: email,
+          password: pass
+        });
+
+        if (error) {
+          document.getElementById('login-error-msg').innerText = "Invalid Credentials or Auth Error!";
+          document.getElementById('login-error-msg').classList.remove('hidden');
+        } else {
+          this.state.isAdminLoggedIn = true;
+          this.closeLoginModal();
+          this.renderAdminHeaderBtn();
+          this.openAdminDashboard();
+        }
+      }
+
+      async logoutAdmin() {
+        if (this.supabase) {
+          await this.supabase.auth.signOut();
+        }
+        this.state.isAdminLoggedIn = false;
+        this.renderAdminHeaderBtn();
+        this.backToSearch();
+      }
+
+      openAdminDashboard() {
+        if (!this.state.isAdminLoggedIn) {
+          this.openLoginModal();
+          return;
+        }
+
+        document.getElementById('search-view-container').classList.add('hidden');
+        document.getElementById('post-detail-view').classList.add('hidden');
+        document.getElementById('admin-dashboard-view').classList.remove('hidden');
+
+        this.renderAdminManagePostsTable();
+        this.renderAdminCategoriesList();
+        this.renderAdminTopicsList();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      switchAdminTab(tab) {
+        this.state.adminActiveTab = tab;
+        document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+          btn.className = 'admin-tab-btn theme-card opacity-70 hover:opacity-100 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap';
+        });
+        document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+
+        document.getElementById(`admin-tab-btn-${tab}`).className = 'admin-tab-btn bg-brand-600 text-white px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap';
+        document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
+      }
+
+      async handleCreatePostSubmit(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('admin-post-title').value;
+        const category = document.getElementById('admin-post-category').value;
+        const mediaType = document.getElementById('admin-post-media-type').value;
+        const mediaUrl = document.getElementById('admin-post-media-url').value;
+        const videoUrl = document.getElementById('admin-post-video-url').value;
+        const authorName = document.getElementById('admin-post-author-name').value;
+        const authorAvatar = document.getElementById('admin-post-author-avatar').value;
+        const readTime = document.getElementById('admin-post-read-time').value;
+        const snippet = document.getElementById('admin-post-snippet').value;
+        const tagsStr = document.getElementById('admin-post-tags').value;
+        const content = document.getElementById('admin-post-content').value;
+
+        const newPostPayload = {
+          title,
+          slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          category,
+          category_id: category.replace(/[^a-zA-Z]/g, '').toLowerCase(),
+          media_type: mediaType,
+          media_url: mediaUrl,
+          video_sample: videoUrl || mediaUrl,
+          author_name: authorName,
+          author_avatar: authorAvatar,
+          author_role: "Administrator Author",
+          date_str: "Just now",
+          read_time: readTime,
+          likes: 0,
+          snippet,
+          tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
+          content
+        };
+
+        if (this.supabase) {
+          const { data, error } = await this.supabase.from('posts').insert(newPostPayload).select().single();
+          if (error) {
+            alert("Error inserting into Supabase: " + error.message);
+            return;
+          }
+          if (data) {
+            this.posts.unshift({
+              id: data.id,
+              title: data.title,
+              slug: data.slug,
+              category: data.category,
+              categoryId: data.category_id,
+              mediaType: data.media_type,
+              mediaUrl: data.media_url,
+              videoSample: data.video_sample,
+              author: { name: data.author_name, avatar: data.author_avatar, role: data.author_role },
+              date: data.date_str,
+              readTime: data.read_time,
+              likes: data.likes || 0,
+              snippet: data.snippet,
+              tags: data.tags || [],
+              content: data.content
+            });
+          }
+        }
+
+        e.target.reset();
+        alert("New post saved and published to Supabase!");
+        this.renderPosts();
+        this.renderAdminManagePostsTable();
+        this.switchAdminTab('manage-posts');
+      }
+
+      renderAdminManagePostsTable() {
+        const body = document.getElementById('admin-manage-posts-table-body');
+        document.getElementById('admin-posts-count').innerText = this.posts.length;
+
+        body.innerHTML = this.posts.map(p => `
+          <tr class="hover:bg-slate-800/20">
+            <td class="p-2 sm:p-3 font-mono opacity-60">${p.id}</td>
+            <td class="p-2 sm:p-3 font-bold max-w-xs truncate">${p.title}</td>
+            <td class="p-2 sm:p-3"><span class="bg-brand-900/60 text-brand-300 px-2 py-0.5 rounded text-[10px] sm:text-xs">${p.category}</span></td>
+            <td class="p-2 sm:p-3 uppercase font-mono text-[10px] sm:text-xs">${p.mediaType}</td>
+            <td class="p-2 sm:p-3 opacity-60 text-[10px] sm:text-xs">${p.date}</td>
+            <td class="p-2 sm:p-3 text-right space-x-2">
+              <button onclick="app.openPost(${p.id})" class="text-brand-400 hover:underline">View</button>
+              <button onclick="app.deletePost(${p.id})" class="text-red-400 hover:underline">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      async deletePost(id) {
+        if (confirm("Are you sure you want to delete this post from Supabase?")) {
+          if (this.supabase) {
+            await this.supabase.from('posts').delete().eq('id', id);
+          }
+          this.posts = this.posts.filter(p => p.id !== id);
+          this.renderPosts();
+          this.renderAdminManagePostsTable();
+        }
+      }
+
+      async handleUpdateBranding(e) {
+        e.preventDefault();
+        this.state.siteConfig.title = document.getElementById('admin-site-title-input').value;
+        this.state.siteConfig.tagline = document.getElementById('admin-site-tagline-input').value;
+        this.state.siteConfig.logoChar = document.getElementById('admin-site-logo-char-input').value;
+        this.state.siteConfig.logoUrl = document.getElementById('admin-site-logo-url-input').value;
+        this.state.siteConfig.heroTitleMain = document.getElementById('admin-hero-title-main').value;
+        this.state.siteConfig.heroTitleHighlight = document.getElementById('admin-hero-title-highlight').value;
+        this.state.siteConfig.heroSubtitle = document.getElementById('admin-hero-subtitle').value;
+
+        if (this.supabase) {
+          const payload = {
+            id: 1,
+            title: this.state.siteConfig.title,
+            tagline: this.state.siteConfig.tagline,
+            logo_char: this.state.siteConfig.logoChar,
+            logo_url: this.state.siteConfig.logoUrl,
+            hero_title_main: this.state.siteConfig.heroTitleMain,
+            hero_title_highlight: this.state.siteConfig.heroTitleHighlight,
+            hero_subtitle: this.state.siteConfig.heroSubtitle
+          };
+          const { error } = await this.supabase.from('site_config').upsert(payload);
+          if (error) {
+            alert("Error saving branding to Supabase: " + error.message);
+            return;
+          }
+        }
+
+        this.renderBranding();
+        alert("Site branding and logo settings stored in Supabase successfully!");
+      }
+
+      async handleAddCategory(e) {
+        e.preventDefault();
+        const input = document.getElementById('new-category-input');
+        const name = input.value.trim();
+
+        if (name && !this.categories.includes(name)) {
+          if (this.supabase) {
+            await this.supabase.from('categories').insert({ name });
+          }
+          this.categories.push(name);
+          input.value = '';
+          this.renderCategoriesPills();
+          this.renderAdminCategoriesList();
+        }
+      }
+
+      async removeCategory(cat) {
+        if (this.supabase) {
+          await this.supabase.from('categories').delete().eq('name', cat);
+        }
+        this.categories = this.categories.filter(c => c !== cat);
+        this.renderCategoriesPills();
+        this.renderAdminCategoriesList();
+      }
+
+      renderAdminCategoriesList() {
+        const list = document.getElementById('admin-categories-list');
+        list.innerHTML = this.categories.map(c => `
+          <li class="flex items-center justify-between theme-input p-2 rounded-lg">
+            <span>${c}</span>
+            <button onclick="app.removeCategory('${c}')" class="text-red-400 hover:underline">Remove</button>
+          </li>
+        `).join('');
+      }
+
+      async handleAddTrendingTopic(e) {
+        e.preventDefault();
+        const input = document.getElementById('new-topic-input');
+        let topic = input.value.trim();
+
+        if (topic) {
+          if (!topic.startsWith('#')) topic = '#' + topic;
+          if (!this.trendingTopics.includes(topic)) {
+            if (this.supabase) {
+              await this.supabase.from('trending_topics').insert({ name: topic });
+            }
+            this.trendingTopics.push(topic);
+            input.value = '';
+            this.renderTrendingTopics();
+            this.renderAdminTopicsList();
+          }
+        }
+      }
+
+      async removeTrendingTopic(topic) {
+        if (this.supabase) {
+          await this.supabase.from('trending_topics').delete().eq('name', topic);
+        }
+        this.trendingTopics = this.trendingTopics.filter(t => t !== topic);
+        this.renderTrendingTopics();
+        this.renderAdminTopicsList();
+      }
+
+      renderAdminTopicsList() {
+        const list = document.getElementById('admin-topics-list');
+        if (list) {
+          list.innerHTML = this.trendingTopics.map(t => `
+            <div class="flex items-center gap-2 theme-input px-3 py-1.5 rounded-lg text-xs">
+              <span>${t}</span>
+              <button onclick="app.removeTrendingTopic('${t}')" class="text-red-400 hover:underline">Remove</button>
+            </div>
+          `).join('');
+        }
+      }
+
+      handleNewsletter(e) {
+        e.preventDefault();
+        alert("Subscribed successfully!");
+        e.target.reset();
+      }
+
+      openShareModal() {
+        const input = document.getElementById('share-url-input');
+        if (input) input.value = window.location.href;
+        document.getElementById('share-modal').classList.remove('hidden');
+      }
+
+      openShareModalForPost(id) {
+        const input = document.getElementById('share-url-input');
+        if (input) input.value = window.location.origin + "?post=" + id;
+        document.getElementById('share-modal').classList.remove('hidden');
+      }
+
+      closeShareModal() {
+        document.getElementById('share-modal').classList.add('hidden');
+      }
+
+      copyShareLink() {
+        const copyText = document.getElementById('share-url-input');
+        if (copyText) {
+          copyText.select();
+          document.execCommand('copy');
+          alert("Link copied to clipboard!");
+        }
+      }
+
+      setupScrollListener() {
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('reading-progress');
+        
+        window.addEventListener('scroll', () => {
+          if (!progressContainer.classList.contains('hidden')) {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            progressBar.style.width = scrolled + "%";
+          }
+        });
+      }
+    }
+
+    const app = new BlogEngineApp();
+  </script>
+</body>
+</html>
