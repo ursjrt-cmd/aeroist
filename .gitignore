@@ -1,7 +1,0 @@
-# Secrets and local-only environment files
-.env
-.env.*
-!.env.edge.example
-node_modules/
-.DS_Store
-Thumbs.db
